@@ -1,0 +1,13 @@
+{
+  "name": "Arena Stream",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+  "forwardPorts": [2567],
+  "portsAttributes": {
+    "2567": {
+      "label": "Arena Stream",
+      "protocol": "https",
+      "onAutoForward": "openBrowser"
+    }
+  },
+  "postCreateCommand": "npm install && npm run build"
+}
