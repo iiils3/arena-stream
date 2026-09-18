@@ -26,7 +26,7 @@ class ArenaScene extends Phaser.Scene{
   for(let x=0;x<W;x+=80){bg.lineStyle(2,0x70503a,.22);bg.lineBetween(x,430,x+35,900);}
   for(let y=470;y<900;y+=70){bg.lineStyle(2,0x70503a,.16);bg.lineBetween(0,y,W,y);}
   this.add.rectangle(W/2,455,1510,620,0x3a2924,.35).setStrokeStyle(5,0x846045,.7);
-  this.drawGate(120,360);this.drawGate(1680,360);
+  this.drawGate(120,360);this.drawGate(1680,360);this.add.rectangle(900,450,1050,560,0x000000,0).setStrokeStyle(4,0xc48b52,.55);this.add.text(900,165,"ميدان الاشتباك",{fontFamily:"serif",fontSize:"18px",color:"#d5a875"}).setOrigin(.5);
   for(let i=0;i<12;i++){const flame=this.add.circle(160+i*135,395,8,0xe6a24a,.8);this.tweens.add({targets:flame,scale:1.35,duration:500+i*20,yoyo:true,repeat:-1});}
  }
  private drawGate(x:number,y:number){
@@ -60,7 +60,7 @@ class ArenaScene extends Phaser.Scene{
    const $=getStateCallbacks(this.room);
    $(this.room.state).players.onAdd((p,id)=>this.addPlayer(p,id));$(this.room.state).players.onRemove((_p,id)=>this.removePlayer(id));
    $(this.room.state).pickups.onAdd((p,id)=>this.addPickup(p,id));$(this.room.state).pickups.onRemove((_p,id)=>this.removePickup(id));
-   this.room.onMessage("attack-fx",(f:any)=>this.attackFx(f));this.room.onMessage("kill-fx",(f:any)=>this.killFx(f));this.room.onMessage("pickup-fx",(f:any)=>this.pickupFx(f));
+   this.room.onMessage("attack-fx",(f:any)=>this.attackFx(f));this.room.onMessage("hawk-fx",(f:any)=>this.hawkFx(f));this.room.onMessage("kill-fx",(f:any)=>this.killFx(f));this.room.onMessage("pickup-fx",(f:any)=>this.pickupFx(f));
    this.room.onMessage("round-result",(x:any)=>this.feed.setText("قادة الجولة القادمة:\n"+x.map((p:any)=>"⚔ "+p.name+" • "+p.kills).join("\n")));
   }catch(e){this.status.setText("فشل اتصال WebSocket");console.error(e);}
  }
@@ -90,6 +90,7 @@ class ArenaScene extends Phaser.Scene{
  }
  private removePickup(id:string){const c=this.pickups.get(id);if(c){c.destroy();this.pickups.delete(id);}}
  private attackFx(f:any){const line=this.add.graphics().setDepth(40);line.lineStyle(f.weapon==="bow"?5:12,f.weapon==="bow"?0xe0a65b:0xf3e1c1,.95);line.lineBetween(f.x1,f.y1,f.x2,f.y2);this.tweens.add({targets:line,alpha:0,duration:130,onComplete:()=>line.destroy()});}
+ private hawkFx(f:any){const t=this.add.text(f.x,f.y-130,"🦅",{fontSize:"42px"}).setOrigin(.5).setDepth(55);this.tweens.add({targets:t,x:f.x+20,y:f.y-20,rotation:.35,duration:420});this.time.delayedCall(430,()=>{t.destroy();});const hit=this.add.text(f.x,f.y-52,"✦",{fontSize:"30px",color:"#f0c98a"}).setOrigin(.5).setDepth(55);this.tweens.add({targets:hit,alpha:0,y:f.y-85,duration:300,onComplete:()=>hit.destroy()});}
  private killFx(f:any){const t=this.add.text(f.x,f.y-45,"✦",{fontSize:"42px",color:"#fff4d2",stroke:"#3b170d",strokeThickness:5}).setOrigin(.5).setDepth(50);this.tweens.add({targets:t,y:f.y-100,alpha:0,scale:1.5,duration:650,onComplete:()=>t.destroy()});}
  private pickupFx(f:any){const t=this.add.text(f.x,f.y-30,"⚔",{fontSize:"26px",color:"#f2d19a"}).setOrigin(.5).setDepth(50);this.tweens.add({targets:t,y:f.y-65,alpha:0,duration:450,onComplete:()=>t.destroy()});}
  update(){
