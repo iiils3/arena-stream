@@ -1,6 +1,7 @@
 import { MapSchema, Schema, type } from "@colyseus/schema";
 export type Team = "A" | "B";
 export type Weapon = "sword" | "spear" | "bow";
+
 export class PlayerState extends Schema {
   @type("string") name = "";
   @type("string") team: Team = "A";
@@ -14,6 +15,7 @@ export class PlayerState extends Schema {
   @type("boolean") alive = true;
   @type("boolean") weakened = false;
 }
+
 export class ArenaState extends Schema {
   @type({ map: PlayerState }) players = new MapSchema<PlayerState>();
   @type("number") remainingMs = 15 * 60 * 1000;
@@ -29,4 +31,12 @@ export class ArenaState extends Schema {
   @type("number") votes1 = 0;
   @type("number") votes2 = 0;
   @type("number") votes3 = 0;
+  @type("boolean") darkness = false;
+  @type("number") arenaScale = 1;
+  @type("number") trapX = 0;
+  @type("number") trapY = 0;
+  @type("string") bountyId = "";
+  @type("number") heartX = 0;
+  @type("number") heartY = 0;
+  @type("string") heartTeam = "";
 }
