@@ -5,7 +5,6 @@
   "portsAttributes": {
     "2567": {
       "label": "Arena Stream",
-      "protocol": "https",
       "onAutoForward": "openBrowser"
     }
   },
