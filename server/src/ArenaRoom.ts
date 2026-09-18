@@ -2,7 +2,7 @@ import { Client, Room } from "colyseus";
 import { ArenaState, PlayerState, Team, Weapon } from "./state.js";
 const WIDTH=930, HEIGHT=540, OX=70, OY=100, MAX=10, MATCH=15*60*1000, EVENT=5*60*1000;
 const HP: Record<Weapon,number>={sword:5,spear:4,bow:2};
-const EVENTS=["ظلام تام","انكماش الساحة","تبديل السلاح","فخ أرضي","مكافأة على القائد","القلب"];
+const EVENTS=["ظلام تام","انكماش الساحة","تبديل السلاح","فخ أرضي","مكافأة على القائد","القلب"]; const DEV=process.env.ARENA_DEV==="1";
 type Input={up?:boolean;down?:boolean;left?:boolean;right?:boolean};
 export class ArenaRoom extends Room<ArenaState> {
  maxClients=MAX; state=new ArenaState();
@@ -18,9 +18,9 @@ export class ArenaRoom extends Room<ArenaState> {
  onJoin(c:Client,o:{name?:string}){
   const p=new PlayerState(),i=this.state.players.size; p.name=String(o?.name||"Player").slice(0,16); p.team=i<5?"A":"B";
   p.x=OX+80+(i%5)*175; p.y=OY+(i<5?95:360); p.weapon=(["sword","spear","bow"] as Weapon[])[i%3]; p.maxHp=HP[p.weapon]; p.hp=p.maxHp;
-  this.state.players.set(c.sessionId,p); this.inputs.set(c.sessionId,{}); if(this.state.players.size===MAX)this.state.phase="playing";
+  this.state.players.set(c.sessionId,p); this.inputs.set(c.sessionId,{}); if(this.state.players.size===MAX || (DEV && this.state.players.size>=1))this.state.phase="playing";
  }
- onLeave(c:Client){this.inputs.delete(c.sessionId);this.attacks.delete(c.sessionId);const t=this.timers.get(c.sessionId);if(t)clearTimeout(t);this.timers.delete(c.sessionId);this.state.players.delete(c.sessionId);if(this.state.players.size<MAX)this.state.phase="waiting";}
+ onLeave(c:Client){this.inputs.delete(c.sessionId);this.attacks.delete(c.sessionId);const t=this.timers.get(c.sessionId);if(t)clearTimeout(t);this.timers.delete(c.sessionId);this.state.players.delete(c.sessionId);if(this.state.players.size<MAX && !DEV)this.state.phase="waiting";}
  private tick(d:number){
   if(this.state.phase!=="playing")return; this.state.remainingMs=Math.max(0,this.state.remainingMs-d);this.state.eventRemainingMs=Math.max(0,this.state.eventRemainingMs-d);
   if(this.state.eventRemainingMs<=0){this.event();this.state.eventRemainingMs=EVENT;}
