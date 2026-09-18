@@ -1,12 +1,23 @@
 import { MapSchema, Schema, type } from "@colyseus/schema";
 export type Team = "A" | "B";
 export type Weapon = "sword" | "spear" | "bow";
+export type Gender = "female" | "male";
+
+export class WeaponPickup extends Schema {
+  @type("string") weapon: Weapon = "sword";
+  @type("string") team: Team = "A";
+  @type("number") x = 0;
+  @type("number") y = 0;
+  @type("boolean") active = true;
+}
 
 export class PlayerState extends Schema {
   @type("string") name = "";
   @type("string") team: Team = "A";
+  @type("string") gender: Gender = "male";
   @type("number") x = 0;
   @type("number") y = 0;
+  @type("number") facing = 1;
   @type("string") weapon: Weapon = "sword";
   @type("number") kills = 0;
   @type("number") lives = 2;
@@ -18,6 +29,7 @@ export class PlayerState extends Schema {
 
 export class ArenaState extends Schema {
   @type({ map: PlayerState }) players = new MapSchema<PlayerState>();
+  @type({ map: WeaponPickup }) pickups = new MapSchema<WeaponPickup>();
   @type("number") remainingMs = 15 * 60 * 1000;
   @type("number") eventRemainingMs = 5 * 60 * 1000;
   @type("string") phase = "waiting";
@@ -39,4 +51,8 @@ export class ArenaState extends Schema {
   @type("number") heartX = 0;
   @type("number") heartY = 0;
   @type("string") heartTeam = "";
+  @type("number") arenaX = 0;
+  @type("number") arenaY = 0;
+  @type("number") arenaW = 0;
+  @type("number") arenaH = 0;
 }
