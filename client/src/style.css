@@ -17,3 +17,15 @@ button{font:inherit;-webkit-tap-highlight-color:transparent;touch-action:none}
 @media (max-width:700px){
   body{background:#09080c}
 }
+
+.touch-controls{display:none}
+@media (max-width:900px) and (orientation:landscape){
+  .touch-controls{display:block}
+  .touch-btn{position:absolute;width:58px;height:58px;border-radius:18px;border:1px solid #ffffff2e;background:#100c16cc;color:#f5edf7;box-shadow:0 5px 18px #0008;font-size:24px;font-weight:700;pointer-events:auto}
+  .touch-btn:active{transform:scale(.94);background:#2a2032}
+  .up{left:112px;bottom:120px}.down{left:112px;bottom:28px}.left{left:40px;bottom:74px}.right{left:184px;bottom:74px}
+  .attack{right:112px;bottom:86px;width:82px;height:82px;border-radius:50%;font-size:31px}
+  .weapon{right:28px;bottom:105px}
+  .vote1{right:28px;top:108px}.vote2{right:100px;top:108px}.vote3{right:172px;top:108px}
+  .touch-hint{position:absolute;left:42px;bottom:5px;color:#ffffff55;font-size:10px;pointer-events:none}
+}
