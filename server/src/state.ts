@@ -23,4 +23,10 @@ export class ArenaState extends Schema {
   @type("number") eventIndex = 0;
   @type("string") lastEvent = "";
   @type("string") lastKill = "";
+  @type("string") vote1 = "";
+  @type("string") vote2 = "";
+  @type("string") vote3 = "";
+  @type("number") votes1 = 0;
+  @type("number") votes2 = 0;
+  @type("number") votes3 = 0;
 }
