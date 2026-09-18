@@ -5,7 +5,7 @@ import "./style.css";
 const WIDTH=1280,HEIGHT=720,WORLD={x:70,y:100,w:930,h:540};
 type RemotePlayer={x:number;y:number;team:string;name:string;kills:number;lives:number;alive:boolean;weapon:string;body:Phaser.GameObjects.Arc;halo:Phaser.GameObjects.Arc;label:Phaser.GameObjects.Text;};
 class ArenaScene extends Phaser.Scene {
- private room!:Room; private players=new Map<string,RemotePlayer>(); private keys!:Record<string,Phaser.Input.Keyboard.Key>; private rank!:Phaser.GameObjects.Text; private status!:Phaser.GameObjects.Text; private clock!:Phaser.GameObjects.Text; private event!:Phaser.GameObjects.Text; private feed!:Phaser.GameObjects.Text; private connected=false; private voteText!:Phaser.GameObjects.Text; private overlay!:Phaser.GameObjects.Rectangle; private touch?:HTMLDivElement;
+ private room!:Room; private players=new Map<string,RemotePlayer>(); private keys!:Record<string,Phaser.Input.Keyboard.Key>; private rank!:Phaser.GameObjects.Text; private status!:Phaser.GameObjects.Text; private clock!:Phaser.GameObjects.Text; private event!:Phaser.GameObjects.Text; private feed!:Phaser.GameObjects.Text; private connected=false; private voteText!:Phaser.GameObjects.Text; private overlay?:Phaser.GameObjects.Rectangle; private touch?:HTMLDivElement;
 
  constructor(){super("ArenaScene");}
  async create(){this.drawArena();this.makeHud();this.makeKeys();this.makeTouch();await this.connect();}
