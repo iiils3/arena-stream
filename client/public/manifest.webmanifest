@@ -1,0 +1,10 @@
+{
+  "name":"Arena Stream",
+  "short_name":"Arena",
+  "start_url":"/",
+  "display":"fullscreen",
+  "orientation":"landscape",
+  "background_color":"#09080c",
+  "theme_color":"#09080c",
+  "icons":[]
+}
