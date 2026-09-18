@@ -9,6 +9,7 @@ export class ArenaRoom extends Room<ArenaState> {
  private inputs=new Map<string,Input>(); private timers=new Map<string,ReturnType<typeof setTimeout>>(); private attacks=new Map<string,number>(); private votes=new Map<string,number>();
  onCreate(){
   this.setPatchRate(50);
+  this.prepareVote();
   this.onMessage("input",(c,p:Input)=>this.inputs.set(c.sessionId,{up:!!p?.up,down:!!p?.down,left:!!p?.left,right:!!p?.right}));
   this.onMessage("attack",c=>this.attack(c)); this.onMessage("weapon",c=>this.weapon(c));
   this.onMessage("vote",(c,p:{option?:number})=>{const n=Number(p?.option);if(n>=1&&n<=3)this.votes.set(c.sessionId,n);});
@@ -35,9 +36,20 @@ export class ArenaRoom extends Room<ArenaState> {
   const timer=setTimeout(()=>{if(!this.state.players.has(tid))return;if(t.lives<=0)t.lives=1;t.maxHp=t.weakened?1:HP[t.weapon];t.hp=t.maxHp;t.x=OX+35+Math.random()*(WIDTH-70);t.y=OY+35+Math.random()*(HEIGHT-70);t.alive=true;this.timers.delete(tid);},delay);this.timers.set(tid,timer);
  }
  private weapon(c:Client){const p=this.state.players.get(c.sessionId);if(!p?.alive)return;const w:Weapon[]=["sword","spear","bow"];p.weapon=w[(w.indexOf(p.weapon)+1)%3];p.maxHp=p.weakened?1:HP[p.weapon];p.hp=Math.min(p.hp,p.maxHp);}
- private prepareVote(){\n  const pool=[...EVENTS].sort(()=>Math.random()-.5).slice(0,3);\n  [this.state.vote1,this.state.vote2,this.state.vote3]=pool;\n  this.state.votes1=0;this.state.votes2=0;this.state.votes3=0;this.votes.clear();\n}\n\n private event(){\n  for(const n of this.votes.values()){if(n===1)this.state.votes1++;else if(n===2)this.state.votes2++;else this.state.votes3++;}\n  const options=[this.state.vote1,this.state.vote2,this.state.vote3];const counts=[this.state.votes1,this.state.votes2,this.state.votes3];\n  const winner=counts.indexOf(Math.max(...counts));\n  const name=options[winner]||EVENTS[this.state.eventIndex%EVENTS.length];this.state.eventIndex++;this.state.activeEvent=name;this.state.lastEvent=`الجمهور اختار: ${name}`;
+ private prepareVote(){
+  const pool=[...EVENTS].sort(()=>Math.random()-.5).slice(0,3);
+  [this.state.vote1,this.state.vote2,this.state.vote3]=pool;
+  this.state.votes1=0;this.state.votes2=0;this.state.votes3=0;this.votes.clear();
+}
+
+ private event(){
+  for(const n of this.votes.values()){if(n===1)this.state.votes1++;else if(n===2)this.state.votes2++;else this.state.votes3++;}
+  const options=[this.state.vote1,this.state.vote2,this.state.vote3];const counts=[this.state.votes1,this.state.votes2,this.state.votes3];
+  const winner=counts.indexOf(Math.max(...counts));
+  const name=options[winner]||EVENTS[this.state.eventIndex%EVENTS.length];this.state.eventIndex++;this.state.activeEvent=name;this.state.lastEvent=`الجمهور اختار: ${name}`;
   if(name==="تبديل السلاح")for(const p of this.state.players.values()){const w:Weapon[]=["sword","spear","bow"];p.weapon=w[(w.indexOf(p.weapon)+1)%3];p.maxHp=p.weakened?1:HP[p.weapon];p.hp=Math.min(p.hp,p.maxHp);}
-  this.prepareVote();\n  if(name==="القلب"){const total={A:0,B:0};for(const p of this.state.players.values())total[p.team]+=p.kills;const win:Team=total.A>=total.B?"A":"B";for(const p of this.state.players.values())if(p.team===win){p.lives+=3;p.weakened=false;p.maxHp=HP[p.weapon];p.hp=p.maxHp;}}
+  this.prepareVote();
+  if(name==="القلب"){const total={A:0,B:0};for(const p of this.state.players.values())total[p.team]+=p.kills;const win:Team=total.A>=total.B?"A":"B";for(const p of this.state.players.values())if(p.team===win){p.lives+=3;p.weakened=false;p.maxHp=HP[p.weapon];p.hp=p.maxHp;}}
  }
  private finish(){this.state.phase="finished";const top=[...this.state.players.values()].sort((a,b)=>b.kills-a.kills).slice(0,2);this.broadcast("round-result",top.map(p=>({name:p.name,team:p.team,kills:p.kills})));}
 }
