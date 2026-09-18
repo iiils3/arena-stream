@@ -2,43 +2,109 @@ import Phaser from "phaser";
 import { Client, getStateCallbacks, Room } from "colyseus.js";
 import "./style.css";
 
-const WIDTH=1280,HEIGHT=720,WORLD={x:70,y:100,w:930,h:540};
+const W=1800,H=900;
 type Input={up?:boolean;down?:boolean;left?:boolean;right?:boolean};
-type RemotePlayer={x:number;y:number;team:string;name:string;kills:number;lives:number;alive:boolean;weapon:string;body:Phaser.GameObjects.Arc;halo:Phaser.GameObjects.Arc;label:Phaser.GameObjects.Text;};
-class ArenaScene extends Phaser.Scene {
- private room!:Room; private players=new Map<string,RemotePlayer>(); private keys!:Record<string,Phaser.Input.Keyboard.Key>; private rank!:Phaser.GameObjects.Text; private status!:Phaser.GameObjects.Text; private clock!:Phaser.GameObjects.Text; private event!:Phaser.GameObjects.Text; private feed!:Phaser.GameObjects.Text; private connected=false; private voteText!:Phaser.GameObjects.Text; private overlay?:Phaser.GameObjects.Rectangle; private touch?:HTMLDivElement;
+type Actor={c:Phaser.GameObjects.Container;body:Phaser.GameObjects.Polygon;weapon:Phaser.GameObjects.Graphics;label:Phaser.GameObjects.Text;team:string;gender:string;name:string;x:number;y:number;facing:number;alive:boolean;weaponName:string};
+
+class ArenaScene extends Phaser.Scene{
+ private room!:Room; private actors=new Map<string,Actor>(); private pickups=new Map<string,Phaser.GameObjects.Container>();
+ private keys!:Record<string,Phaser.Input.Keyboard.Key>; private connected=false; private intro=true;
+ private clock!:Phaser.GameObjects.Text; private status!:Phaser.GameObjects.Text; private rank!:Phaser.GameObjects.Text; private feed!:Phaser.GameObjects.Text; private vote!:Phaser.GameObjects.Text; private title!:Phaser.GameObjects.Text; private dark?:Phaser.GameObjects.Rectangle;
 
  constructor(){super("ArenaScene");}
- async create(){this.drawArena();this.makeHud();this.makeKeys();this.setupImmersiveMode();this.makeTouch();await this.connect();}
- private drawArena(){this.cameras.main.setBackgroundColor("#09080c");const g=this.add.graphics();g.fillStyle(0x151119,1);g.fillRect(0,0,WIDTH,HEIGHT);g.fillStyle(0x211b25,1);g.fillRect(WORLD.x,WORLD.y,WORLD.w,WORLD.h);g.lineStyle(3,0x4b3d4b,1);for(let x=WORLD.x+45;x<WORLD.x+WORLD.w;x+=150)g.strokeRect(x,WORLD.y+28,92,WORLD.h-56);for(let y=WORLD.y+130;y<WORLD.y+WORLD.h;y+=150)g.lineBetween(WORLD.x+25,y,WORLD.x+WORLD.w-25,y);g.lineStyle(2,0x6b526c,.5);g.strokeRect(WORLD.x+8,WORLD.y+8,WORLD.w-16,WORLD.h-16);}
- private makeHud(){this.add.text(32,22,"ARENA STREAM",{fontFamily:"system-ui",fontSize:"28px",color:"#f1e8d8",fontStyle:"bold"});this.status=this.add.text(32,60,"جاري الاتصال...",{fontFamily:"system-ui",fontSize:"15px",color:"#a99fac"});const top=this.add.graphics();top.fillStyle(0x100d14,.95);top.fillRoundedRect(430,18,330,62,12);this.clock=this.add.text(448,30,"15:00",{fontFamily:"monospace",fontSize:"30px",color:"#f4ead9",fontStyle:"bold"});this.event=this.add.text(570,40,"تصويت الجمهور بعد 05:00",{fontFamily:"system-ui",fontSize:"13px",color:"#c8bdc9"});const side=this.add.graphics();side.fillStyle(0x100d14,.94);side.fillRoundedRect(1020,18,228,390,14);this.add.text(1042,36,"الترتيب — القتلات",{fontFamily:"system-ui",fontSize:"18px",color:"#f1e8d8",fontStyle:"bold"});this.rank=this.add.text(1042,72,"بانتظار اللاعبين...",{fontFamily:"monospace",fontSize:"13px",color:"#d6ced8",lineSpacing:5});this.add.text(1020,430,"آخر الأحداث",{fontFamily:"system-ui",fontSize:"16px",color:"#f1e8d8",fontStyle:"bold"});this.feed=this.add.text(1020,458,"",{fontFamily:"system-ui",fontSize:"12px",color:"#aaa1ad",lineSpacing:7,wordWrap:{width:228}});this.voteText=this.add.text(1020,560,"",{fontFamily:"system-ui",fontSize:"12px",color:"#d7c9df",lineSpacing:6,wordWrap:{width:228}});this.add.text(32,662,"WASD للحركة • SPACE للهجوم • E لتبديل السلاح • 1/2/3 للتصويت",{fontFamily:"system-ui",fontSize:"14px",color:"#938895"});}
- private makeKeys(){if(!this.input.keyboard)return;this.keys={up:this.input.keyboard.addKey("W"),down:this.input.keyboard.addKey("S"),left:this.input.keyboard.addKey("A"),right:this.input.keyboard.addKey("D"),attack:this.input.keyboard.addKey("SPACE"),weapon:this.input.keyboard.addKey("E"),vote1:this.input.keyboard.addKey("ONE"),vote2:this.input.keyboard.addKey("TWO"),vote3:this.input.keyboard.addKey("THREE")};}
- private setupImmersiveMode(){
-   const gate=document.getElementById("orientation-gate");
-   const enter=document.getElementById("enter-arena") as HTMLButtonElement|null;
-   const enterFullscreen=async()=>{try{await document.documentElement.requestFullscreen?.();}catch{} try{await (screen.orientation as any)?.lock?.("landscape");}catch{} gate?.setAttribute("aria-hidden","true");};
-   enter?.addEventListener("click",enterFullscreen,{once:true});
-   document.addEventListener("contextmenu",e=>e.preventDefault());
-   document.addEventListener("gesturestart",e=>e.preventDefault());
-   document.addEventListener("touchmove",e=>{if(e.cancelable)e.preventDefault();},{passive:false});
+ async create(){
+  this.cameras.main.setBackgroundColor("#120d0b");this.drawCity();this.makeHud();this.makeKeys();this.makeTouch();
+  this.cameras.main.setBounds(0,0,W,H);this.cameras.main.centerOn(W/2,H/2);this.cameras.main.setZoom(.62);
+  this.title=this.add.text(W/2,105,"قلعة الساحة القديمة",{fontFamily:"serif",fontSize:"42px",fontStyle:"bold",color:"#f0dfbd",stroke:"#1a0e09",strokeThickness:8}).setOrigin(.5).setDepth(100);
+  this.status.setText("جاري الاتصال بالساحة...");
+  await this.connect();
  }
+ private drawCity(){
+  const bg=this.add.graphics();bg.fillStyle(0x110b09,1);bg.fillRect(0,0,W,H);
+  for(let i=0;i<36;i++){const x=i*55+(i%3)*12,h=120+(i%5)*35;bg.fillStyle(i%2?0x2b211e:0x342823,1);bg.fillRect(x,105-h,48,h);bg.fillStyle(0x171313,1);bg.fillRect(x+10,125-h,12,22);bg.fillRect(x+29,145-h,10,18);}
+  bg.fillStyle(0x4a3122,1);bg.fillRect(0,430,W,470);
+  for(let x=0;x<W;x+=80){bg.lineStyle(2,0x70503a,.22);bg.lineBetween(x,430,x+35,900);}
+  for(let y=470;y<900;y+=70){bg.lineStyle(2,0x70503a,.16);bg.lineBetween(0,y,W,y);}
+  this.add.rectangle(W/2,455,1510,620,0x3a2924,.35).setStrokeStyle(5,0x846045,.7);
+  this.drawGate(120,360);this.drawGate(1680,360);
+  for(let i=0;i<12;i++){const flame=this.add.circle(160+i*135,395,8,0xe6a24a,.8);this.tweens.add({targets:flame,scale:1.35,duration:500+i*20,yoyo:true,repeat:-1});}
+ }
+ private drawGate(x:number,y:number){
+  const g=this.add.graphics();g.fillStyle(0x211817,1);g.fillRect(x-65,y-90,130,230);g.lineStyle(8,0x76533d,1);g.strokeRect(x-65,y-90,130,230);g.fillStyle(0x090808,1);g.fillRect(x-38,y-65,76,205);g.fillStyle(0x4e3326,1);g.fillRect(x-78,y-110,18,250);g.fillRect(x+60,y-110,18,250);g.lineStyle(4,0xa77b4e,.6);g.strokeRect(x-48,y-75,96,215);
+ }
+ private makeHud(){
+  this.add.rectangle(900,38,1760,76,0x100c0a,.88).setScrollFactor(0).setDepth(80);
+  this.add.text(36,18,"ARENA STREAM",{fontFamily:"serif",fontSize:"28px",fontStyle:"bold",color:"#ead7b7"}).setScrollFactor(0).setDepth(81);
+  this.status=this.add.text(36,54,"",{fontSize:"13px",color:"#aaa09a"}).setScrollFactor(0).setDepth(81);
+  this.clock=this.add.text(900,16,"15:00",{fontFamily:"monospace",fontSize:"30px",fontStyle:"bold",color:"#f5e6cc"}).setOrigin(.5,0).setScrollFactor(0).setDepth(81);
+  this.add.text(900,54,"4 ضد 4 • ساحة فانتازية",{fontSize:"12px",color:"#a99d92"}).setOrigin(.5).setScrollFactor(0).setDepth(81);
+  this.rank=this.add.text(1570,105,"",{fontFamily:"monospace",fontSize:"12px",color:"#eee2d0",lineSpacing:4,backgroundColor:"#0d0a09dd",padding:{x:12,y:10}}).setOrigin(1,0).setScrollFactor(0).setDepth(80);
+  this.feed=this.add.text(30,650,"",{fontSize:"13px",color:"#f0dfc9",lineSpacing:6,backgroundColor:"#0d0a09aa",padding:{x:10,y:8}}).setScrollFactor(0).setDepth(80);
+  this.vote=this.add.text(900,665,"",{fontSize:"13px",color:"#e8d6bd",align:"center",backgroundColor:"#0d0a09cc",padding:{x:16,y:10}}).setOrigin(.5).setScrollFactor(0).setDepth(80);
+ }
+ private makeKeys(){const k=this.input.keyboard;if(!k)return;this.keys={up:k.addKey("W"),down:k.addKey("S"),left:k.addKey("A"),right:k.addKey("D"),attack:k.addKey("SPACE"),weapon:k.addKey("E"),vote1:k.addKey("ONE"),vote2:k.addKey("TWO"),vote3:k.addKey("THREE")};}
  private makeTouch(){
-   const wrap=document.createElement("div");wrap.className="touch-controls";wrap.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:20";
-   const send=(v:Input)=>this.room?.send("input",v);
-   const button=(txt:string,cls:string,fn:()=>void)=>{const b=document.createElement("button");b.className="touch-btn "+cls;b.textContent=txt;b.setAttribute("aria-label",txt);b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);fn()};wrap.appendChild(b);return b;};
-   const hold=(txt:string,cls:string,v:Input)=>{let b:any;let stop=()=>send({up:false,down:false,left:false,right:false});b=button(txt,cls,()=>send(v));b.onpointerup=stop;b.onpointercancel=stop;b.onpointerleave=stop;return b;};
-   hold("▲","up",{up:true});hold("▼","down",{down:true});hold("◀","left",{left:true});hold("▶","right",{right:true});
-   button("⚔","attack",()=>this.room?.send("attack"));button("↻","weapon",()=>this.room?.send("weapon"));
-   button("1","vote1",()=>this.room?.send("vote",{option:1}));button("2","vote2",()=>this.room?.send("vote",{option:2}));button("3","vote3",()=>this.room?.send("vote",{option:3}));
-   const hint=document.createElement("div");hint.className="touch-hint";hint.textContent="الحركة • الهجوم • السلاح • التصويت";wrap.appendChild(hint);
-   document.body.appendChild(wrap);this.touch=wrap;
+  const wrap=document.createElement("div");wrap.className="touch-controls";wrap.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:20";
+  const button=(txt:string,cls:string,fn:()=>void)=>{const b=document.createElement("button");b.className="touch-btn "+cls;b.textContent=txt;b.onpointerdown=e=>{e.preventDefault();fn()};wrap.appendChild(b);return b;};
+  const hold=(txt:string,cls:string,v:Input)=>{const b=button(txt,cls,()=>this.room&&this.room.send("input",v));const stop=()=>this.room&&this.room.send("input",{up:false,down:false,left:false,right:false});b.onpointerup=stop;b.onpointercancel=stop;return b;};
+  hold("▲","up",{up:true});hold("▼","down",{down:true});hold("◀","left",{left:true});hold("▶","right",{right:true});
+  button("⚔","attack",()=>this.room&&this.room.send("attack"));button("↻","weapon",()=>this.room&&this.room.send("weapon"));
+  button("1","vote1",()=>this.room&&this.room.send("vote",{option:1}));button("2","vote2",()=>this.room&&this.room.send("vote",{option:2}));button("3","vote3",()=>this.room&&this.room.send("vote",{option:3}));
+  document.body.appendChild(wrap);
  }
- private async connect(){try{const defaultServerUrl=location.protocol==="https:"?`wss://${location.host}`:"ws://localhost:2567";const client=new Client((globalThis as any).__ARENA_SERVER_URL__||defaultServerUrl);const name=new URLSearchParams(location.search).get("name")||`Player-${Math.floor(100+Math.random()*900)}`;this.room=await client.joinOrCreate("arena",{name});this.connected=true;this.status.setText(`متصل • ${this.room.sessionId.slice(0,6)}`);const $=getStateCallbacks(this.room);$(this.room.state).players.onAdd((p,id)=>this.addRemote(p,id));$(this.room.state).players.onRemove((_p,id)=>this.removeRemote(id));this.room.onMessage("round-result",(top)=>this.feed.setText("القادة للجولة القادمة:\n"+top.map((p:any)=>`${p.name} • ${p.kills} قتلات`).join("\n")));this.room.onMessage("attack-fx",(fx:any)=>this.fx(fx));this.room.onMessage("kill-fx",(fx:any)=>this.killFx(fx));this.room.onMessage("trap-fx",(fx:any)=>this.trapFx(fx));}catch(e){this.status.setText("السيرفر غير متصل — شغّل server أولاً");console.error(e);}}
- private addRemote(p:any,id:string){const team=p.team==="A";const halo=this.add.circle(p.x,p.y,31,team?0x9b59ff:0x45d6e8,.13);const body=this.add.circle(p.x,p.y,17,0x0e0d12,1);this.add.circle(p.x,p.y,10,team?0xb77cff:0x66e7f5,.85);const label=this.add.text(p.x,p.y-49,p.name||"Player",{fontFamily:"monospace",fontSize:"12px",color:"#eee7f0",backgroundColor:"#0b0910",padding:{x:5,y:3}}).setOrigin(.5);this.players.set(id,{x:p.x,y:p.y,team:p.team,name:p.name,kills:p.kills,lives:p.lives,alive:p.alive,weapon:p.weapon,body,halo,label});}
- private removeRemote(id:string){const p=this.players.get(id);if(!p)return;p.body.destroy();p.halo.destroy();p.label.destroy();this.players.delete(id);}
- private fx(f:any){const line=this.add.graphics();line.lineStyle(f.weapon==="bow"?3:7,f.weapon==="bow"?0xf5d76e:0xe8d9ff,.9);line.lineBetween(f.x1,f.y1,f.x2,f.y2);this.tweens.add({targets:line,alpha:0,duration:160,onComplete:()=>line.destroy()});if(f.weapon==="bow"){const a=this.add.circle(f.x2,f.y2,4,0xf5d76e,1);this.tweens.add({targets:a,alpha:0,x:f.x2,y:f.y2,duration:180,onComplete:()=>a.destroy()});}}
- private killFx(f:any){const t=this.add.text(f.x,f.y-28,"✦",{fontSize:"28px",color:"#fff"}).setOrigin(.5);this.tweens.add({targets:t,y:f.y-70,alpha:0,duration:550,onComplete:()=>t.destroy()});}
- private trapFx(f:any){const c=this.add.circle(f.x,f.y,22,0xff7744,.3);this.tweens.add({targets:c,scale:2,alpha:0,duration:350,onComplete:()=>c.destroy()});}
- update(){if(!this.connected)return;const k=this.keys;this.room.send("input",{up:k.up.isDown,down:k.down.isDown,left:k.left.isDown,right:k.right.isDown});if(Phaser.Input.Keyboard.JustDown(k.attack))this.room.send("attack");if(Phaser.Input.Keyboard.JustDown(k.weapon))this.room.send("weapon");if(Phaser.Input.Keyboard.JustDown(k.vote1))this.room.send("vote",{option:1});if(Phaser.Input.Keyboard.JustDown(k.vote2))this.room.send("vote",{option:2});if(Phaser.Input.Keyboard.JustDown(k.vote3))this.room.send("vote",{option:3});const s:any=this.room.state;const secs=Math.ceil(s.remainingMs/1000);this.clock.setText(`${String(Math.floor(secs/60)).padStart(2,"0")}:${String(secs%60).padStart(2,"0")}`);const es=Math.ceil(s.eventRemainingMs/1000);this.event.setText(`الجمهور بعد ${String(Math.floor(es/60)).padStart(2,"0")} • ${s.activeEvent||"—"}`);if(s.lastKill)this.feed.setText(s.lastKill);this.voteText.setText(`تصويت الجمهور:\n1) ${s.vote1||"—"} (${s.votes1||0})\n2) ${s.vote2||"—"} (${s.votes2||0})\n3) ${s.vote3||"—"} (${s.votes3||0})`);const sorted:any[]=[];s.players.forEach((p:any,id:string)=>{const r=this.players.get(id);if(!r)return;r.x=p.x;r.y=p.y;r.kills=p.kills;r.lives=p.lives;r.alive=p.alive;r.body.setPosition(p.x,p.y).setVisible(p.alive);r.halo.setPosition(p.x,p.y).setVisible(p.alive);r.label.setPosition(p.x,p.y-49).setVisible(p.alive);sorted.push(p);});sorted.sort((a,b)=>b.kills-a.kills);this.rank.setText(sorted.map((p,i)=>`${String(i+1).padStart(2," ")}. ${p.name} ⚔ ${p.kills} ♥ ${p.lives}`).join("\n"));if(s.darkness)this.overlay=this.overlay||this.add.rectangle(WIDTH/2,HEIGHT/2,WIDTH,HEIGHT,0x000000,.72).setDepth(50);else if(this.overlay){this.overlay.destroy();this.overlay=undefined;}}
+ private async connect(){
+  try{
+   const url=(globalThis as any).__ARENA_SERVER_URL__||(location.protocol==="https:"?"wss://"+location.host:"ws://localhost:2567");
+   const client=new Client(url);const name=new URLSearchParams(location.search).get("name")||("Warrior-"+Math.floor(100+Math.random()*900));
+   this.room=await client.joinOrCreate("arena",{name});this.connected=true;this.status.setText("متصل • 4v4");
+   const $=getStateCallbacks(this.room);
+   $(this.room.state).players.onAdd((p,id)=>this.addPlayer(p,id));$(this.room.state).players.onRemove((_p,id)=>this.removePlayer(id));
+   $(this.room.state).pickups.onAdd((p,id)=>this.addPickup(p,id));$(this.room.state).pickups.onRemove((_p,id)=>this.removePickup(id));
+   this.room.onMessage("attack-fx",(f:any)=>this.attackFx(f));this.room.onMessage("kill-fx",(f:any)=>this.killFx(f));this.room.onMessage("pickup-fx",(f:any)=>this.pickupFx(f));
+   this.room.onMessage("round-result",(x:any)=>this.feed.setText("قادة الجولة القادمة:\n"+x.map((p:any)=>"⚔ "+p.name+" • "+p.kills).join("\n")));
+  }catch(e){this.status.setText("فشل اتصال WebSocket");console.error(e);}
+ }
+ private addPlayer(p:any,id:string){
+  const c=this.add.container(p.x,p.y).setDepth(20);
+  const shadow=this.add.ellipse(0,20,54,20,0x000000,.45);
+  const body=this.add.polygon(0,0,[-20,25,-14,-18,0,-34,15,-18,22,25],p.team==="A"?0x40265f:0x194c55,1);
+  const head=this.add.circle(0,-45,13,p.gender==="female"?0xc48f79:0xb67b63,1);
+  const cape=this.add.triangle(0,-5,0,0,-25,48,25,48,p.team==="A"?0x5b3280:0x206a72,.9);
+  const glow=this.add.circle(0,-18,37,p.team==="A"?0xb05cff:0x42d7e4,.10);
+  const weapon=this.add.graphics();const label=this.add.text(0,-78,p.name,{fontFamily:"monospace",fontSize:"12px",color:"#fff",backgroundColor:"#0b0807cc",padding:{x:4,y:2}}).setOrigin(.5);
+  c.add([glow,shadow,cape,body,head,weapon,label]);
+  this.actors.set(id,{c,body,weapon,label,team:p.team,gender:p.gender,name:p.name,x:p.x,y:p.y,facing:p.facing,alive:p.alive,weaponName:p.weapon});
+  this.drawWeapon(this.actors.get(id)!);
+ }
+ private removePlayer(id:string){const a=this.actors.get(id);if(a){a.c.destroy();this.actors.delete(id);}}
+ private drawWeapon(a:Actor){
+  a.weapon.clear();const f=a.facing||1;a.weapon.lineStyle(a.weaponName==="bow"?4:7,a.weaponName==="bow"?0xd7a65c:0xd8d0c7,1);
+  if(a.weaponName==="sword"){a.weapon.lineBetween(17*f,-20,58*f,-62);a.weapon.lineStyle(6,0x76543b,1);a.weapon.lineBetween(10*f,-13,25*f,-27);}
+  else if(a.weaponName==="spear"){a.weapon.lineBetween(15*f,-15,78*f,-18);a.weapon.fillStyle(0xc8c5bb,1);a.weapon.fillTriangle(78*f,-18,67*f,-25,67*f,-11);}
+  else{a.weapon.arc(20*f,-28,28,.5,2.6,false);a.weapon.lineBetween(20*f,-56,20*f,0);a.weapon.lineBetween(20*f,-28,65*f,-28);}
+ }
+ private addPickup(p:any,id:string){
+  const c=this.add.container(p.x,p.y).setDepth(12);const glow=this.add.circle(0,0,24,p.team==="A"?0xa85cff:0x42d9e7,.12);const g=this.add.graphics();g.lineStyle(4,p.weapon==="bow"?0xd7a65c:0xd8d0c7,1);
+  if(p.weapon==="sword")g.lineBetween(-18,15,22,-28);else if(p.weapon==="spear")g.lineBetween(-25,8,30,0);else{g.arc(0,0,22,.5,2.6,false);g.lineBetween(0,-22,0,20);}
+  c.add([glow,g]);this.pickups.set(id,c);
+ }
+ private removePickup(id:string){const c=this.pickups.get(id);if(c){c.destroy();this.pickups.delete(id);}}
+ private attackFx(f:any){const line=this.add.graphics().setDepth(40);line.lineStyle(f.weapon==="bow"?5:12,f.weapon==="bow"?0xe0a65b:0xf3e1c1,.95);line.lineBetween(f.x1,f.y1,f.x2,f.y2);this.tweens.add({targets:line,alpha:0,duration:130,onComplete:()=>line.destroy()});}
+ private killFx(f:any){const t=this.add.text(f.x,f.y-45,"✦",{fontSize:"42px",color:"#fff4d2",stroke:"#3b170d",strokeThickness:5}).setOrigin(.5).setDepth(50);this.tweens.add({targets:t,y:f.y-100,alpha:0,scale:1.5,duration:650,onComplete:()=>t.destroy()});}
+ private pickupFx(f:any){const t=this.add.text(f.x,f.y-30,"⚔",{fontSize:"26px",color:"#f2d19a"}).setOrigin(.5).setDepth(50);this.tweens.add({targets:t,y:f.y-65,alpha:0,duration:450,onComplete:()=>t.destroy()});}
+ update(){
+  if(!this.connected)return;const k=this.keys;
+  this.room.send("input",{up:k.up.isDown,down:k.down.isDown,left:k.left.isDown,right:k.right.isDown});
+  if(Phaser.Input.Keyboard.JustDown(k.attack))this.room.send("attack");if(Phaser.Input.Keyboard.JustDown(k.weapon))this.room.send("weapon");if(Phaser.Input.Keyboard.JustDown(k.vote1))this.room.send("vote",{option:1});if(Phaser.Input.Keyboard.JustDown(k.vote2))this.room.send("vote",{option:2});if(Phaser.Input.Keyboard.JustDown(k.vote3))this.room.send("vote",{option:3});
+  const s:any=this.room.state,secs=Math.ceil(s.remainingMs/1000);this.clock.setText(String(Math.floor(secs/60)).padStart(2,"0")+":"+String(secs%60).padStart(2,"0"));
+  this.vote.setText("تصويت الجمهور\n1) "+s.vote1+"  2) "+s.vote2+"  3) "+s.vote3+"\n"+(s.lastEvent||""));
+  if(s.lastKill)this.feed.setText(s.lastKill);
+  const pts:any[]=[];let minX=W,maxX=0,minY=H,maxY=0;
+  s.players.forEach((p:any,id:string)=>{const a=this.actors.get(id);if(!a)return;a.x=p.x;a.y=p.y;a.facing=p.facing;a.alive=p.alive;a.weaponName=p.weapon;a.c.setPosition(p.x,p.y);a.c.setVisible(p.alive);a.body.setFillStyle(p.team==="A"?0x4b2b70:0x205c65);this.drawWeapon(a);if(p.alive){pts.push(p);minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);}});
+  pts.sort((a,b)=>b.kills-a.kills);this.rank.setText(pts.map((p,i)=>(i+1)+". "+p.name+" ⚔"+p.kills+" ♥"+p.lives).join("\n"));
+  if(pts.length){const cx=(minX+maxX)/2,cy=(minY+maxY)/2,spread=Math.max(maxX-minX,maxY-minY),z=Phaser.Math.Clamp(1.08-spread/1250,.62,1.05);this.cameras.main.zoom=Phaser.Math.Linear(this.cameras.main.zoom,z,.045);this.cameras.main.pan(cx,cy,.045,"Sine.easeOut");}
+  if(s.darkness){this.dark=this.dark||this.add.rectangle(W/2,H/2,W,H,0x000000,.72).setScrollFactor(0).setDepth(70);}else if(this.dark){this.dark.destroy();this.dark=undefined;}
+  if(this.intro&&this.connected){this.intro=false;this.tweens.add({targets:this.title,alpha:0,y:60,duration:1400,delay:1100});}
+ }
 }
-new Phaser.Game({type:Phaser.AUTO,parent:"game",width:WIDTH,height:HEIGHT,scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true},scene:[ArenaScene]});
+new Phaser.Game({type:Phaser.AUTO,parent:"game",width:W,height:H,backgroundColor:"#120d0b",scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true},scene:[ArenaScene]});
