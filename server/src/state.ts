@@ -25,6 +25,7 @@ export class PlayerState extends Schema {
   @type("number") maxHp = 5;
   @type("boolean") alive = true;
   @type("boolean") weakened = false;
+  @type("boolean") finalLife = false;
 }
 
 export class ArenaState extends Schema {
