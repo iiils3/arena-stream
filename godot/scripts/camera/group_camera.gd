@@ -6,11 +6,17 @@ class_name ArenaGroupCamera
 @export var zoom_speed := 4.0
 @export var follow_speed := 5.0
 @export var padding := Vector2(320.0, 220.0)
+@export var impact_decay := 12.0
+
+var impact_offset := Vector2.ZERO
+
+func shake(offset: Vector2) -> void:
+    impact_offset += offset
 
 func update_from_players(players: Array[Node2D], delta: float) -> void:
     var living: Array[Node2D] = []
     for player in players:
-        if is_instance_valid(player) and not player.get("dead"):
+        if is_instance_valid(player) and not bool(player.get("dead")):
             living.append(player)
 
     if living.is_empty():
@@ -24,7 +30,8 @@ func update_from_players(players: Array[Node2D], delta: float) -> void:
         max_pos = max_pos.max(player.global_position)
 
     var center := (min_pos + max_pos) * 0.5
-    global_position = global_position.lerp(center, 1.0 - exp(-follow_speed * delta))
+    global_position = global_position.lerp(center + impact_offset, 1.0 - exp(-follow_speed * delta))
+    impact_offset = impact_offset.lerp(Vector2.ZERO, 1.0 - exp(-impact_decay * delta))
 
     var span := max_pos - min_pos + padding
     var required := max(span.x / 1920.0, span.y / 1080.0)
