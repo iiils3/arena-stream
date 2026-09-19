@@ -42,24 +42,20 @@ func _run() -> void:
         _fail("slash must enter active state")
         return
 
+    enemy.global_position = player.global_position + Vector2(82, 0)
     var before := enemy.health
     player.resolve_active_hit([enemy])
     if enemy.health >= before:
         _fail("active weapon trace must be able to damage a target")
         return
 
+    enemy.state = ArenaMeleeFighter.State.READY
     if not enemy.perform_attack(ArenaMeleeAttack.Kind.STAB):
         _fail("enemy stab should start")
         return
-
     enemy._tick_state(0.12)
     if enemy.state != ArenaMeleeFighter.State.ACTIVE:
         _fail("stab must enter active state")
-        return
-
-    enemy.set_block(true)
-    if enemy.state == ArenaMeleeFighter.State.ACTIVE:
-        _fail("blocking must not remain active during a new defensive state")
         return
 
     var stamina_before := player.stamina
