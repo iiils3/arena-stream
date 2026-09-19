@@ -42,7 +42,8 @@ func _run() -> void:
         _fail("slash must enter active state")
         return
 
-    enemy.global_position = player.global_position + Vector2(82, 0)
+    var trace_target := player.global_position + player._weapon_tip_at(player._current_attack_angle())
+    enemy.global_position = trace_target
     var before := enemy.health
     player.resolve_active_hit([enemy])
     if enemy.health >= before:
