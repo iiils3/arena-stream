@@ -90,3 +90,15 @@ This is the checklist the implementation must satisfy.
 The current Arena Stream repository is still a TypeScript/Phaser prototype.
 
 We should NOT pretend that editing the old Phaser client can produce the requested visual quality. The correct next engineering action is to establish a Godot 4 client base and migrate the server/rules concept around it.
+
+## Additional research pass — 2026-09-19
+
+A broader search was run before extending the foundation. Several low-star/small repositories were useful even when they were not suitable as bases:
+
+- GDQuest Godot 4 hitbox/hurtbox demo: useful confirmation of the Area2D separation between hitboxes and hurtboxes. We keep our own implementation so the multiplayer authority boundary stays under Arena Stream's control.
+- LazerCube Godot multiplayer demo: useful prediction/interpolation/reconciliation ideas, but it targets an older Godot beta/.NET stack and is not suitable as a direct dependency.
+- nullnxte server-authoritative networking demo: useful prediction/reconciliation architecture reference, but it is 3D and not a fit for direct reuse.
+- Fury Fist remains especially relevant because it combines pseudo-3D/lane combat with 2v2 team battle and presentation feedback.
+- Colyseus Native SDK remains the preferred networking integration because its current Godot extension targets Godot 4.x and is released separately; its current documentation explicitly describes the Godot extension as beta, so integration must be isolated behind an adapter and tested before gameplay is coupled to it.
+
+The rule is therefore: search broadly, steal ideas—not licenses, assets, or incompatible foundations. A repository with zero stars can still provide a useful algorithm; a popular repository can still be rejected if its architecture or license does not fit.
