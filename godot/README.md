@@ -6,27 +6,51 @@ This folder is the new client foundation for Arena Stream.
 
 - Godot 4 client.
 - 4v4 / 8 seats.
+- Exactly 2 female + 2 male fighters per team.
 - Belt-style 2.5D movement.
-- Server-authoritative multiplayer.
-- Quiver Beat'em Up remains the primary structural reference.
-- Arena Stream owns the rules, networking adapter, camera policy and presentation.
+- Server-authoritative multiplayer target.
+- Quiver Beat'em Up is a structural reference, not a locked dependency.
+- Arena Stream owns the rules, networking boundary, camera policy and presentation.
 
-## Important
+## Current build order
 
-This foundation intentionally does not copy third-party character art or audio.
+1. Keep the Godot scene bootable and CI-validated.
+2. Lock the 4v4 roster, depth movement and camera.
+3. Lock combat data, hitboxes, projectiles and weapon pickups.
+4. Lock lives, respawn and Final Life behavior.
+5. Add anti-camping / falcon rules.
+6. Add animation-driven attack frame data and combat feedback.
+7. Integrate the Colyseus Godot SDK behind a transport adapter.
+8. Move authoritative movement/combat/lives/pickups to the server.
+9. Add match timer, round-end and promotion logic.
+10. Add audience events/voting.
+11. Add spectator HUD and OBS/browser-source integration.
+12. Replace temporary visuals with original/licensed production art, VFX and audio.
 
-The final presentation layer will use original/licensed assets. The visual target is a detailed fantasy city/castle with layered foreground/background, readable silhouettes, lighting, shadows and cinematic camera motion.
+## Validation
 
-## Build order
+The branch has a headless smoke test at:
 
-1. Import/adapt the Quiver beat'em-up foundation.
-2. Replace its demo stage with ArenaStreamArena.
-3. Add 8 player slots and 4v4 team assignment.
-4. Add belt movement/depth sorting.
-5. Add the group camera.
-6. Add Arena weapons/combat rules.
-7. Add Colyseus transport.
-8. Add lives/respawns/pickups.
-9. Add audience/stream systems after the vertical slice passes.
+`res://tests/smoke_test.gd`
 
-The old Phaser client is not the visual foundation anymore.
+It checks the parts most likely to drift during refactors:
+- 8 players.
+- 4 players per team.
+- 2 female + 2 male per team.
+- 5 / 4 / 2 weapon hit thresholds.
+- friendly-fire prohibition.
+- 16 weapon pickups.
+- 2 starting lives.
+- 3-second first respawn.
+- 180-second Final Life entry delay.
+- Final-Life state.
+
+Do not merge to `main` while CI is failing or unavailable.
+
+## Asset rule
+
+No third-party character, environment, audio or VFX asset is production-safe until its exact license is checked and recorded.
+
+The visual target is a detailed original fantasy city/castle with layered depth, readable silhouettes, lighting, shadows and cinematic camera motion.
+
+Golden Axed is used only as a gameplay/feel reference. No Golden Axe/Golden Axed characters, names, proprietary assets, extracted data or proprietary code are being copied.
