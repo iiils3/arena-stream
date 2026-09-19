@@ -66,6 +66,16 @@ func _run() -> void:
         _fail("friendly fire must be disabled")
         return
 
+    var falcon_combat := ArenaCombatController.new()
+    falcon_combat.weapon = bow
+    falcon_combat.hit_count = bow.hits_to_kill - 1
+    if not falcon_combat.apply_nonlethal_hit(-1):
+        _fail("falcon nonlethal hit should register")
+        return
+    if falcon_combat.state == ArenaCombatController.State.DEFEATED:
+        _fail("falcon damage must never defeat a fighter")
+        return
+
     var pickups_node := arena.get_node("Pickups")
     var pickups := pickups_node.get_child_count()
     if pickups != 16:
