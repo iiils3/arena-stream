@@ -28,6 +28,7 @@ var player_lives: Dictionary = {}
 var player_slots: Array[String] = ["", "", "", ""]
 var fighter_slots: Dictionary = {}
 var prepared_intermission := false
+var run_team_active := false
 var local_player: ArenaMeleeFighter
 var pulse := 0.0
 
@@ -161,10 +162,17 @@ func _on_stage_cleared(_stage: ArenaStageDefinition) -> void:
 
 func _on_stage_failed(_stage: ArenaStageDefinition) -> void:
     prepared_intermission = false
+    run_team_active = false
     for slot in TEAM_SIZE:
         if not player_slots[slot].is_empty():
             player_queue.mark_player_out(slot)
             player_slots[slot] = ""
+    for fighter in players:
+        if is_instance_valid(fighter):
+            fighter.queue_free()
+    players.clear()
+    fighter_slots.clear()
+    local_player = null
     queue_redraw()
 
 func _on_enemy_defeated(enemy: ArenaMeleeFighter, attacker: ArenaMeleeFighter) -> void:
@@ -192,19 +200,15 @@ func _on_player_defeated(fighter: ArenaMeleeFighter, _attacker: ArenaMeleeFighte
     player_lives[name] = remaining
     player_queue.mark_player_out(slot)
     player_slots[slot] = ""
-
-    if remaining > 0 and not player_queue.waiting_players.has(name):
-        player_queue.register_player(name)
+    fighter_slots.erase(fighter)
 
     if _active_players().is_empty() and stage_director.running:
         stage_director.fail_current_stage()
 
 func _prepare_intermission_team() -> void:
-    if stage_director.current_stage_index > 0 and stage_director.get_current_stage() != null:
-        pass
-
-    if _active_players().is_empty():
+    if not run_team_active:
         player_slots = player_queue.begin_team()
+        run_team_active = true
     else:
         player_slots = player_queue.replace_missing_slots()
 
