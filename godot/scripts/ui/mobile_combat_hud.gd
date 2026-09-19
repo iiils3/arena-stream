@@ -17,7 +17,6 @@ var pressed := {}
 
 func _ready() -> void:
     layer = 20
-    process_input = true
     set_process_input(true)
     queue_redraw()
 
