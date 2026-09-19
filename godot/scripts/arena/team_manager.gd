@@ -12,7 +12,7 @@ func register_player(player_id: int, team: int, gender: String) -> bool:
         return false
     var count := 0
     for p in players.values():
-        if p.team == team:
+        if int(p["team"]) == team:
             count += 1
     if count >= TEAM_SIZE:
         return false
@@ -21,13 +21,13 @@ func register_player(player_id: int, team: int, gender: String) -> bool:
 
 func add_kill(player_id: int) -> void:
     if players.has(player_id):
-        players[player_id].kills += 1
+        players[player_id]["kills"] += 1
 
 func get_team_kills(team: int) -> int:
     var total := 0
     for p in players.values():
-        if p.team == team:
-            total += p.kills
+        if int(p["team"]) == team:
+            total += int(p["kills"])
     return total
 
 func leader_for_team(team: int) -> int:
@@ -35,7 +35,7 @@ func leader_for_team(team: int) -> int:
     var best_kills := -1
     for id in players:
         var p = players[id]
-        if p.team == team and p.kills > best_kills:
-            best_id = id
-            best_kills = p.kills
+        if int(p["team"]) == team and int(p["kills"]) > best_kills:
+            best_id = int(id)
+            best_kills = int(p["kills"])
     return best_id
