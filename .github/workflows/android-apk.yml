@@ -32,6 +32,7 @@ jobs:
           use_preset_export_path: true
           presets_to_export: Android
           verbose: true
+          export_debug: true
 
       - name: Verify APK
         run: |
