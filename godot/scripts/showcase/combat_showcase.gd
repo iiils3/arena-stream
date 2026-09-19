@@ -93,43 +93,113 @@ func _reset_fight() -> void:
     queue_redraw()
 
 func _draw() -> void:
-    draw_rect(Rect2(0,0,1920,1080), Color("#101116"))
-    # distant medieval skyline
-    for i in range(12):
-        var x := float(i * 180)
-        var h := float(130 + (i % 4) * 55)
-        draw_rect(Rect2(x, 420-h, 150, h), Color("#25272e"))
-        draw_colored_polygon(PackedVector2Array([
-            Vector2(x-10,420-h), Vector2(x+75,360-h), Vector2(x+160,420-h)
-        ]), Color("#30323a"))
-    # gate and towers
-    draw_rect(Rect2(780, 180, 360, 300), Color("#34363d"))
-    draw_rect(Rect2(850, 275, 220, 205), Color("#17191e"))
-    draw_rect(Rect2(735, 145, 80, 335), Color("#41434a"))
-    draw_rect(Rect2(1105, 145, 80, 335), Color("#41434a"))
-    draw_rect(Rect2(710, 125, 500, 26), Color("#17191e"))
-    # banners
-    draw_colored_polygon(PackedVector2Array([Vector2(780,185),Vector2(860,205),Vector2(780,235)]),Color("#8b2635"))
-    draw_colored_polygon(PackedVector2Array([Vector2(1110,185),Vector2(1030,205),Vector2(1110,235)]),Color("#8b2635"))
-    # battlefield
+    # Establishing composition: distant fortress, layered terrain, then the combat lane.
+    draw_rect(Rect2(0, 0, 1920, 1080), Color("#0a0d13"))
+
+    for band in range(7):
+        var band_y := 120.0 + float(band) * 70.0
+        var shade := 0.055 + float(band) * 0.012
+        draw_rect(Rect2(0, band_y, 1920, 72), Color(shade, shade + 0.012, shade + 0.028))
+
+    # Moon and distant mountain silhouettes.
+    draw_circle(Vector2(1510, 205), 76.0, Color("#d7d8cf", 0.78))
+    draw_circle(Vector2(1532, 187), 76.0, Color("#11151e", 0.72))
+
     draw_colored_polygon(PackedVector2Array([
-        Vector2(0,520),Vector2(1920,520),Vector2(1920,1080),Vector2(0,1080)
-    ]), Color("#4a4039"))
-    for y in range(610, 1050, 70):
-        draw_line(Vector2(0,y), Vector2(1920,y), Color(1,1,1,0.035), 2)
-    # foreground pillars
-    draw_rect(Rect2(60, 500, 110, 580), Color("#282a30"))
-    draw_rect(Rect2(1750, 500, 110, 580), Color("#282a30"))
-    # fire bowls
-    for x in [610.0,1310.0]:
-        draw_circle(Vector2(x,500), 24, Color("#17191e"))
-        draw_circle(Vector2(x,490), 12, Color("#e6a23c"))
-        draw_circle(Vector2(x,482), 7, Color("#f4d37a"))
-    # title
-    draw_string(ThemeDB.fallback_font, Vector2(70,80), "ARENA STREAM // COMBAT TEST", HORIZONTAL_ALIGNMENT_LEFT, -1, 28, Color("#e7dfcf"))
-    draw_string(ThemeDB.fallback_font, Vector2(70,116), "J Slash   I Overhead   K Stab   SPACE Block   L Dodge   SHIFT Kick   R Reset", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("#aeb4bf"))
-    draw_string(ThemeDB.fallback_font, Vector2(70,155), "Target: weighty directional medieval melee — mobile controls will replace keyboard in production.", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color("#8f969f"))
+        Vector2(0, 475), Vector2(180, 330), Vector2(340, 445), Vector2(530, 300),
+        Vector2(730, 450), Vector2(920, 325), Vector2(1110, 450), Vector2(1320, 290),
+        Vector2(1540, 445), Vector2(1730, 315), Vector2(1920, 440), Vector2(1920, 560),
+        Vector2(0, 560)
+    ]), Color("#151b24"))
+
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(0, 500), Vector2(240, 395), Vector2(470, 500), Vector2(720, 370),
+        Vector2(990, 505), Vector2(1260, 380), Vector2(1500, 500), Vector2(1760, 365),
+        Vector2(1920, 485), Vector2(1920, 590), Vector2(0, 590)
+    ]), Color("#202631"))
+
+    # Fortress silhouette.
+    draw_rect(Rect2(650, 245, 620, 315), Color("#2b3039"))
+    draw_rect(Rect2(610, 185, 125, 375), Color("#343a45"))
+    draw_rect(Rect2(1185, 185, 125, 375), Color("#343a45"))
+    draw_rect(Rect2(770, 295, 380, 265), Color("#222731"))
+    draw_rect(Rect2(835, 330, 250, 230), Color("#080b10"))
+
+    for x in [610.0, 675.0, 1185.0, 1250.0]:
+        for battlement in range(3):
+            draw_rect(Rect2(x + float(battlement) * 38.0, 165, 25, 28), Color("#3d444f"))
+
+    draw_rect(Rect2(735, 240, 450, 22), Color("#1a1f28"))
+    draw_line(Vector2(740, 262), Vector2(1180, 262), Color("#606975", 0.35), 3.0)
+
+    # Gate depth and portcullis.
+    draw_rect(Rect2(805, 330, 310, 230), Color("#11151c"))
+    draw_arc(Vector2(960, 375), 155, PI, TAU, 32, Color("#555d68", 0.8), 10.0)
+    for x in range(830, 1100, 34):
+        draw_line(Vector2(x, 375), Vector2(x, 555), Color("#454b55"), 7.0)
+
+    # Banners.
+    draw_line(Vector2(755, 230), Vector2(755, 380), Color("#7b6b54"), 4.0)
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(758, 235), Vector2(850, 255), Vector2(758, 290)
+    ]), Color("#8b2637"))
+    draw_line(Vector2(1165, 230), Vector2(1165, 380), Color("#7b6b54"), 4.0)
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(1162, 235), Vector2(1070, 255), Vector2(1162, 290)
+    ]), Color("#8b2637"))
+
+    # Ground plane with depth bands.
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(0, 525), Vector2(1920, 525), Vector2(1920, 1080), Vector2(0, 1080)
+    ]), Color("#403a35"))
+    for depth in range(9):
+        var y := 565.0 + float(depth) * 58.0
+        var alpha := 0.11 - float(depth) * 0.006
+        draw_line(Vector2(0, y), Vector2(1920, y), Color(0.92, 0.86, 0.74, alpha), 2.0)
+
+    # Perspective seams make the arena read as a physical space instead of a flat panel.
+    for x in range(-500, 2500, 170):
+        draw_line(Vector2(960, 540), Vector2(x, 1080), Color(0.08, 0.07, 0.065, 0.22), 2.0)
+
+    # Stone foreground walls and iron details.
+    draw_rect(Rect2(35, 505, 145, 575), Color("#20242b"))
+    draw_rect(Rect2(1740, 505, 145, 575), Color("#20242b"))
+    for y in range(530, 1080, 82):
+        draw_line(Vector2(35, y), Vector2(180, y), Color("#454a52", 0.35), 2.0)
+        draw_line(Vector2(1740, y), Vector2(1885, y), Color("#454a52", 0.35), 2.0)
+
+    # Braziers and restrained light pools.
+    for x in [585.0, 1335.0]:
+        draw_circle(Vector2(x, 515), 34.0, Color("#111318"))
+        draw_circle(Vector2(x, 505), 18.0, Color("#8f4825", 0.72))
+        draw_circle(Vector2(x, 495), 10.0, Color("#e2a14b", 0.9))
+        draw_circle(Vector2(x, 485), 5.0, Color("#f5d38a", 0.95))
+        draw_circle(Vector2(x, 510), 74.0, Color(0.75, 0.36, 0.12, 0.045))
+
+    # Combat-stage framing.
+    draw_rect(Rect2(52, 48, 430, 116), Color(0.03, 0.04, 0.055, 0.76))
+    draw_line(Vector2(52, 164), Vector2(482, 164), Color("#a48a62", 0.55), 2.0)
+    draw_string(ThemeDB.fallback_font, Vector2(78, 88), "THE ASHEN GATE", HORIZONTAL_ALIGNMENT_LEFT, -1, 32, Color("#e8dfcf"))
+    draw_string(ThemeDB.fallback_font, Vector2(78, 123), "NIGHT WATCH  •  OUTER WALL", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("#9fa6b0"))
+    draw_string(ThemeDB.fallback_font, Vector2(78, 148), "DUEL GROUND  /  LIVE", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#c59a67"))
+
+    # Compact combat readout.
+    draw_rect(Rect2(690, 48, 540, 74), Color(0.03, 0.04, 0.055, 0.68))
+    draw_string(ThemeDB.fallback_font, Vector2(715, 78), "STAGE 01", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#a48a62"))
+    draw_string(ThemeDB.fallback_font, Vector2(715, 108), "BREAK THE WATCH  •  0 / 8", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("#e8dfcf"))
+    draw_string(ThemeDB.fallback_font, Vector2(1115, 96), "09:58", HORIZONTAL_ALIGNMENT_LEFT, -1, 23, Color("#e8dfcf"))
+
+    # Player status strips; keep the battlefield unobstructed.
     if is_instance_valid(player):
-        draw_string(ThemeDB.fallback_font, Vector2(70,980), "PLAYER  HP %03d   STAMINA %03d" % [int(player.health), int(player.stamina)], HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("#e7dfcf"))
+        draw_rect(Rect2(58, 940, 300, 82), Color(0.03, 0.04, 0.055, 0.72))
+        draw_string(ThemeDB.fallback_font, Vector2(78, 968), "VANGUARD", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("#d9d1c4"))
+        draw_string(ThemeDB.fallback_font, Vector2(78, 997), "HP %03d   ST %03d" % [int(player.health), int(player.stamina)], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("#eee7db"))
+        draw_rect(Rect2(185, 957, 145, 8), Color("#181b20"))
+        draw_rect(Rect2(185, 957, 145 * clampf(player.health / player.max_health, 0.0, 1.0), 8), Color("#a63a42"))
+
     if is_instance_valid(enemy):
-        draw_string(ThemeDB.fallback_font, Vector2(1480,980), "GUARD  HP %03d   STAMINA %03d" % [int(enemy.health), int(enemy.stamina)], HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("#e7dfcf"))
+        draw_rect(Rect2(1562, 940, 300, 82), Color(0.03, 0.04, 0.055, 0.72))
+        draw_string(ThemeDB.fallback_font, Vector2(1582, 968), "CASTLE GUARD", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("#d9d1c4"))
+        draw_string(ThemeDB.fallback_font, Vector2(1582, 997), "HP %03d   ST %03d" % [int(enemy.health), int(enemy.stamina)], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("#eee7db"))
+        draw_rect(Rect2(1689, 957, 145, 8), Color("#181b20"))
+        draw_rect(Rect2(1689, 957, 145 * clampf(enemy.health / enemy.max_health, 0.0, 1.0), 8), Color("#6e737c"))
