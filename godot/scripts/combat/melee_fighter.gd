@@ -34,6 +34,7 @@ var last_weapon_tip := Vector2.ZERO
 var weapon_tip := Vector2.ZERO
 var ai_target: Node2D
 var combat_radius := 42.0
+var mobile_move_input := Vector2.ZERO
 
 func _ready() -> void:
     health = max_health
@@ -87,10 +88,10 @@ func _tick_state(delta: float) -> void:
         queue_redraw()
 
 func _move_fighter(delta: float) -> void:
-    var input_vector := Vector2(
+    var input_vector := mobile_move_input if is_player and mobile_move_input.length() > 0.05 else (Vector2(
         Input.get_axis("ui_left", "ui_right"),
         Input.get_axis("ui_up", "ui_down")
-    ).normalized() if is_player else Vector2.ZERO
+    ).normalized() if is_player else Vector2.ZERO)
     if is_player and input_vector.length() > 0.05:
         var target := Vector2(input_vector.x * move_speed, input_vector.y * move_speed * 0.62)
         velocity = velocity.move_toward(target, acceleration * delta)
@@ -110,6 +111,9 @@ func _move_fighter(delta: float) -> void:
 
     if position.y < 330.0 or position.y > 735.0:
         position.y = clampf(position.y, 330.0, 735.0)
+
+func set_move_input(value: Vector2) -> void:
+    mobile_move_input = value.limit_length(1.0)
 
 func perform_attack(kind: int) -> bool:
     if state != State.READY or stamina < ArenaMeleeAttack.for_kind(kind).stamina_cost:
