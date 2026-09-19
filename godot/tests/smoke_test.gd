@@ -102,6 +102,11 @@ func _run() -> void:
         _fail("kick must break a held guard")
         return
 
+    player.state = ArenaMeleeFighter.State.READY
+    player.attack = null
+    player.attack_clock = 0.0
+    player.kick_clock = 0.0
+    player.stagger_clock = 0.0
     var stamina_before := player.stamina
     if not player.dodge(Vector2.RIGHT):
         _fail("dodge should consume stamina and start")
