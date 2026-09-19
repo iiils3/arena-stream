@@ -1,7 +1,7 @@
 extends Node
 class_name ArenaAudienceDirector
 
-signal vote_opened(options: Array[ArenaAudienceEvent>, closes_in: int)
+signal vote_opened(options: Array[ArenaAudienceEvent], closes_in: int)
 signal vote_updated(counts: Array[int])
 signal vote_closed(winner: ArenaAudienceEvent)
 signal event_started(event: ArenaAudienceEvent)
