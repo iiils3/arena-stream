@@ -29,6 +29,9 @@ var block_held := false
 var dodge_clock := 0.0
 var dodge_direction := Vector2.ZERO
 var stagger_clock := 0.0
+var parry_clock := 0.0
+var counter_clock := 0.0
+var counter_armed := false
 var invulnerable := false
 var last_weapon_tip := Vector2.ZERO
 var weapon_tip := Vector2.ZERO
@@ -45,6 +48,10 @@ func _physics_process(delta: float) -> void:
     if state == State.DEFEATED:
         return
     _recover_stamina(delta)
+    parry_clock = maxf(0.0, parry_clock - delta)
+    counter_clock = maxf(0.0, counter_clock - delta)
+    if counter_clock == 0.0:
+        counter_armed = false
     _tick_state(delta)
     if state != State.WINDUP and state != State.ACTIVE and state != State.RECOVERY and state != State.STAGGER and state != State.DEFEATED:
         _move_fighter(delta)
@@ -119,6 +126,12 @@ func perform_attack(kind: int) -> bool:
     if state != State.READY or stamina < ArenaMeleeAttack.for_kind(kind).stamina_cost:
         return false
     attack = ArenaMeleeAttack.for_kind(kind)
+    if counter_armed and counter_clock > 0.0:
+        attack.damage *= 1.18
+        attack.guard_damage *= 1.12
+        attack.windup *= 0.65
+        counter_armed = false
+        counter_clock = 0.0
     stamina -= attack.stamina_cost
     state = State.WINDUP
     attack_clock = attack.windup
@@ -137,6 +150,7 @@ func set_block(pressed: bool) -> void:
         return
     block_held = pressed and stamina > 2.0
     if block_held:
+        parry_clock = 0.16
         state = State.BLOCK
         state_changed.emit("block")
     elif state == State.BLOCK:
@@ -155,6 +169,17 @@ func dodge(direction: Vector2) -> bool:
     state_changed.emit("dodge")
     return true
 
+func _interrupt_attack(duration: float) -> void:
+    if state == State.DEFEATED:
+        return
+    attack_clock = 0.0
+    attack = null
+    attack_hit_targets.clear()
+    block_held = false
+    state = State.STAGGER
+    stagger_clock = duration
+    state_changed.emit("interrupted")
+
 func receive_melee_hit(attacker: ArenaMeleeFighter, incoming: ArenaMeleeAttack, hit_point: Vector2) -> bool:
     if state == State.DEFEATED or invulnerable:
         return false
@@ -164,6 +189,15 @@ func receive_melee_hit(attacker: ArenaMeleeFighter, incoming: ArenaMeleeAttack, 
         incoming_dir = -facing
 
     if state == State.BLOCK:
+        if parry_clock > 0.0:
+            block_held = false
+            parry_clock = 0.0
+            state = State.READY
+            counter_armed = true
+            counter_clock = 0.42
+            attacker._interrupt_attack(0.34)
+            state_changed.emit("parry")
+            return true
         stamina = maxf(0.0, stamina - incoming.guard_damage)
         if stamina <= 0.0:
             block_held = false
