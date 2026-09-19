@@ -5,6 +5,7 @@ const TEAM_SIZE:=4
 var player_states:Dictionary={}
 var players:Array[Node]=[]
 var player_scene:PackedScene=preload("res://scenes/player/arena_player.tscn")
+var pickup_scene:PackedScene=preload("res://scenes/weapons/weapon_pickup.tscn")
 var spawn_points:Array[Vector2]=[
     Vector2(650,430),Vector2(760,510),Vector2(650,590),Vector2(760,670),
     Vector2(1270,430),Vector2(1160,510),Vector2(1270,590),Vector2(1160,670)
@@ -27,6 +28,7 @@ func _ready()->void:
         player.life.life_lost.connect(_on_life_lost.bind(index))
         player.life.final_life_entered.connect(_on_final_life.bind(index))
         player.life.eliminated.connect(_on_eliminated.bind(index))
+    _spawn_weapon_loot()
     var camera: ArenaGroupCamera=$CameraRig
     camera.update_from_players(players,0.016)
 func _physics_process(_delta:float)->void:
@@ -65,3 +67,28 @@ func get_team(player_id:int)->int:
     return int(player_states[player_id]["team"]) if player_states.has(player_id) else -1
 func can_damage(attacker_id:int,target_id:int)->bool:
     return player_states.has(attacker_id) and player_states.has(target_id) and get_team(attacker_id)!=get_team(target_id)
+
+func _spawn_weapon_loot()->void:
+    var layouts=[
+        [ArenaWeaponData.WeaponType.SWORD,Vector2(520,450)],
+        [ArenaWeaponData.WeaponType.SWORD,Vector2(520,610)],
+        [ArenaWeaponData.WeaponType.SPEAR,Vector2(600,520)],
+        [ArenaWeaponData.WeaponType.SPEAR,Vector2(600,680)],
+        [ArenaWeaponData.WeaponType.BOW,Vector2(700,390)],
+        [ArenaWeaponData.WeaponType.BOW,Vector2(800,390)],
+        [ArenaWeaponData.WeaponType.BOW,Vector2(700,730)],
+        [ArenaWeaponData.WeaponType.BOW,Vector2(800,730)],
+        [ArenaWeaponData.WeaponType.SWORD,Vector2(1400,450)],
+        [ArenaWeaponData.WeaponType.SWORD,Vector2(1400,610)],
+        [ArenaWeaponData.WeaponType.SPEAR,Vector2(1320,520)],
+        [ArenaWeaponData.WeaponType.SPEAR,Vector2(1320,680)],
+        [ArenaWeaponData.WeaponType.BOW,Vector2(1220,390)],
+        [ArenaWeaponData.WeaponType.BOW,Vector2(1120,390)],
+        [ArenaWeaponData.WeaponType.BOW,Vector2(1220,730)],
+        [ArenaWeaponData.WeaponType.BOW,Vector2(1120,730)]
+    ]
+    for entry in layouts:
+        var pickup=pickup_scene.instantiate()
+        pickup.weapon_type=entry[0]
+        pickup.position=entry[1]
+        $Pickups.add_child(pickup)
