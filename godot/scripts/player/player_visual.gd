@@ -7,6 +7,7 @@ class_name ArenaPlayerVisual
 @export var weapon_type := 2
 var flash := 0.0
 var attack := 0.0
+var attack_total := 0.22
 var attack_weapon := 2
 
 func set_state(p_team:int, p_gender:String, p_facing:int, p_weapon:int) -> void:
@@ -16,8 +17,9 @@ func set_state(p_team:int, p_gender:String, p_facing:int, p_weapon:int) -> void:
     weapon_type = p_weapon
     queue_redraw()
 
-func trigger_attack(p_weapon:int) -> void:
-    attack = 0.22
+func trigger_attack(p_weapon:int, windup:float = 0.08, active:float = 0.10, recovery:float = 0.30) -> void:
+    attack_total = maxf(0.01, windup + active + recovery)
+    attack = attack_total
     attack_weapon = p_weapon
     queue_redraw()
 
@@ -55,7 +57,8 @@ func _draw() -> void:
     draw_line(Vector2(10*facing,-14),arm_end,skin,7.0,true)
     var weapon_dir := Vector2(facing,0)
     if attack > 0.0:
-        var sweep := 52.0*(1.0-attack/0.22)
+        var progress := 1.0 - attack/attack_total
+        var sweep := 52.0*progress
         weapon_dir = Vector2(facing,0).rotated(deg_to_rad(-28.0*facing+sweep*facing))
     if weapon_type == 0:
         draw_line(arm_end,arm_end+weapon_dir*58,metal,5.0,true)
