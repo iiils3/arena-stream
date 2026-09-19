@@ -74,6 +74,27 @@ func _run() -> void:
         _fail("counter attack must carry a damage advantage")
         return
 
+    player.state = ArenaMeleeFighter.State.READY
+    player.attack = null
+    player.attack_clock = 0.0
+    if not player.perform_attack(ArenaMeleeAttack.Kind.SLASH):
+        _fail("slash should be available for feint")
+        return
+    if not player.feint() or player.state != ArenaMeleeFighter.State.READY:
+        _fail("feint must cancel an early attack")
+        return
+
+    enemy.state = ArenaMeleeFighter.State.BLOCK
+    enemy.block_held = true
+    player.state = ArenaMeleeFighter.State.READY
+    if not player.kick():
+        _fail("kick should start from ready state")
+        return
+    player.resolve_kick_hit([enemy])
+    if enemy.state != ArenaMeleeFighter.State.STAGGER:
+        _fail("kick must break a held guard")
+        return
+
     var stamina_before := player.stamina
     if not player.dodge(Vector2.RIGHT):
         _fail("dodge should consume stamina and start")
