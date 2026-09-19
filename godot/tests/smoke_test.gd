@@ -118,6 +118,30 @@ func _run() -> void:
         _fail("dodge must provide a short invulnerability window")
         return
 
-    print("ARENA COMBAT SMOKE TEST PASSED")
     showcase.queue_free()
+
+    var stage_scene := preload("res://scenes/stages/stage_run.tscn")
+    var stage = stage_scene.instantiate()
+    root.add_child(stage)
+    await process_frame
+    await process_frame
+
+    if stage.players.size() != 4:
+        _fail("stage run must start with four player slots")
+        return
+    if stage.enemies.size() != 8:
+        _fail("stage 1 must spawn eight enemies")
+        return
+    if stage.stage_director.get_current_stage().stage_id != 1:
+        _fail("stage run must begin at stage 1")
+        return
+    if not stage.stage_director.running:
+        _fail("stage 1 must be running after startup")
+        return
+    if stage.player_queue.get_waiting_count() != 4:
+        _fail("queue must retain the next four players")
+        return
+
+    print("ARENA COMBAT + STAGE SMOKE TEST PASSED")
+    stage.queue_free()
     quit(0)
