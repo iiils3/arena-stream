@@ -13,10 +13,11 @@ var impact_offset := Vector2.ZERO
 func shake(offset: Vector2) -> void:
     impact_offset += offset
 
-func update_from_players(players: Array[Node2D], delta: float) -> void:
+func update_from_players(players: Array, delta: float) -> void:
     var living: Array[Node2D] = []
+
     for player in players:
-        if is_instance_valid(player) and not bool(player.get("dead")):
+        if is_instance_valid(player) and player is Node2D and not bool(player.get("dead")):
             living.append(player)
 
     if living.is_empty():
@@ -30,11 +31,21 @@ func update_from_players(players: Array[Node2D], delta: float) -> void:
         max_pos = max_pos.max(player.global_position)
 
     var center := (min_pos + max_pos) * 0.5
-    global_position = global_position.lerp(center + impact_offset, 1.0 - exp(-follow_speed * delta))
-    impact_offset = impact_offset.lerp(Vector2.ZERO, 1.0 - exp(-impact_decay * delta))
+    global_position = global_position.lerp(
+        center + impact_offset,
+        1.0 - exp(-follow_speed * maxf(delta, 0.0))
+    )
+    impact_offset = impact_offset.lerp(
+        Vector2.ZERO,
+        1.0 - exp(-impact_decay * maxf(delta, 0.0))
+    )
 
     var span := max_pos - min_pos + padding
-    var required := max(span.x / 1920.0, span.y / 1080.0)
-    var target_zoom := clamp(1.0 / max(required, 0.01), min_zoom, max_zoom)
-    var target := Vector2(target_zoom, target_zoom)
-    zoom = zoom.lerp(target, 1.0 - exp(-zoom_speed * delta))
+    var required := maxf(span.x / 1920.0, span.y / 1080.0)
+    var target_zoom_value := clampf(1.0 / maxf(required, 0.01), min_zoom, max_zoom)
+    var target := Vector2(target_zoom_value, target_zoom_value)
+
+    zoom = zoom.lerp(
+        target,
+        1.0 - exp(-zoom_speed * maxf(delta, 0.0))
+    )
