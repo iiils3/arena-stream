@@ -24,6 +24,7 @@ var last_dodge_pressed:=false
 var knockback_velocity:=Vector2.ZERO
 var last_attacker:=-1
 func _ready()->void:
+    add_to_group("arena_players")
     combat=ArenaCombatController.new()
     combat.player_id=player_id
     combat.team=team
@@ -87,14 +88,48 @@ func respawn(at:Vector2,as_final:=false)->void:
     if visual:visual.visible=true
 func _on_hurtbox_hit(attacker_id:int,weapon:ArenaWeaponData,knockback:float)->void:
     if dead:return
-    var attacker_team:=team
-    var attacker_node=get_tree().get_first_node_in_group("player_%d"%attacker_id)
-    if attacker_node:attacker_team=int(attacker_node.team)
+    var attacker_team:=-1
+    var attacker_node:Node=null
+    for candidate in get_tree().get_nodes_in_group("arena_players"):
+        if int(candidate.player_id)==attacker_id:
+            attacker_node=candidate
+            attacker_team=int(candidate.team)
+            break
     if attacker_team==team:return
     receive_attack(attacker_id,attacker_team,weapon,knockback,signf(global_position.x-(attacker_node.global_position.x if attacker_node else global_position.x)))
 func _on_attack_started(weapon_type:int)->void:
     if visual:visual.trigger_attack(weapon_type)
+    var data:ArenaWeaponData=combat.weapon
+    if weapon_type==ArenaWeaponData.WeaponType.BOW:
+        _spawn_arrow(data)
+    else:
+        _spawn_melee_hitbox(data)
     player_attacked.emit(player_id,weapon_type)
+
+func _spawn_melee_hitbox(data:ArenaWeaponData)->void:
+    var hitbox:=ArenaHitbox.new()
+    hitbox.setup(player_id,team,data,facing)
+    var shape:=CollisionShape2D.new()
+    var rect:=RectangleShape2D.new()
+    rect.size=Vector2(data.attack_range,58.0)
+    shape.shape=rect
+    shape.position=Vector2(facing*(data.attack_range*0.5+20.0),-10)
+    hitbox.add_child(shape)
+    get_parent().add_child(hitbox)
+    hitbox.global_position=global_position
+    hitbox.scan()
+    await get_tree().create_timer(data.active_time, true, true).timeout
+    if is_instance_valid(hitbox):hitbox.queue_free()
+
+func _spawn_arrow(data:ArenaWeaponData)->void:
+    var arrow:=ArenaArrowProjectile.new()
+    arrow.setup(player_id,team,data,global_position+Vector2(facing*35.0,-12.0),facing)
+    var shape:=CollisionShape2D.new()
+    var circle:=CircleShape2D.new()
+    circle.radius=7.0
+    shape.shape=circle
+    arrow.add_child(shape)
+    get_parent().add_child(arrow)
 func _on_damage_taken(_attacker_id:int,_weapon_type:int)->void:
     if visual:visual.hit_flash()
 func _on_defeated(attacker_id:int)->void:
