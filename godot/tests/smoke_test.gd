@@ -51,6 +51,7 @@ func _run() -> void:
         return
 
     enemy.state = ArenaMeleeFighter.State.READY
+    enemy.stagger_clock = 0.0
     if not enemy.perform_attack(ArenaMeleeAttack.Kind.STAB):
         _fail("enemy stab should start")
         return
