@@ -1,9 +1,8 @@
-
 extends CharacterBody2D
 class_name ArenaPlayerController
-signal player_attacked(player_id:int, weapon_type:int)
+signal player_attacked(player_id:int,weapon_type:int)
 signal player_hit(player_id:int)
-signal player_defeated(player_id:int, attacker_id:int)
+signal player_defeated(player_id:int,attacker_id:int)
 @export var walk_speed:=220.0
 @export var acceleration:=1000.0
 @export var deceleration:=1300.0
@@ -19,21 +18,30 @@ var dodge_time:=0.0
 var dodge_direction:=Vector2.ZERO
 var combat:ArenaCombatController
 var visual:ArenaPlayerVisual
+var life:ArenaLifeSystem
 var last_attack_pressed:=false
 var last_dodge_pressed:=false
 var knockback_velocity:=Vector2.ZERO
+var last_attacker:=-1
 func _ready()->void:
     combat=ArenaCombatController.new()
     combat.player_id=player_id
     combat.team=team
     add_child(combat)
+    life=ArenaLifeSystem.new()
+    add_child(life)
     combat.attack_started.connect(_on_attack_started)
     combat.damage_taken.connect(_on_damage_taken)
     combat.defeated.connect(_on_defeated)
     visual=get_node_or_null("Visual") as ArenaPlayerVisual
-    if visual: visual.set_state(team,gender,facing,combat.weapon.weapon_type)
+    var hurt=get_node_or_null("Hurtbox") as ArenaHurtbox
+    if hurt:
+        hurt.player_id=player_id
+        hurt.team=team
+        hurt.hit_received.connect(_on_hurtbox_hit)
+    if visual:visual.set_state(team,gender,facing,combat.weapon.weapon_type)
 func _physics_process(delta:float)->void:
-    if combat: combat.tick(delta)
+    if combat:combat.tick(delta)
     knockback_velocity=knockback_velocity.move_toward(Vector2.ZERO,900.0*delta)
     if dead:
         velocity=knockback_velocity
@@ -46,7 +54,7 @@ func _physics_process(delta:float)->void:
         dodge_direction=input_vector
         dodge_time=0.12
     last_dodge_pressed=dodge_pressed
-    if attack_pressed and not last_attack_pressed: combat.try_attack()
+    if attack_pressed and not last_attack_pressed:combat.try_attack()
     last_attack_pressed=attack_pressed
     if dodge_time>0.0:
         dodge_time=maxf(0.0,dodge_time-delta)
@@ -57,26 +65,42 @@ func _physics_process(delta:float)->void:
         velocity=velocity.move_toward(target,rate*delta)+knockback_velocity
     if absf(velocity.x)>1.0:
         facing=1 if velocity.x>0.0 else -1
-        if visual: visual.facing=facing
+        if visual:visual.facing=facing
     move_and_slide()
     global_position.y=clamp(global_position.y,depth_min,depth_max)
     z_index=int(global_position.y)
 func receive_attack(attacker_id:int,attacker_team:int,weapon_data:ArenaWeaponData,knockback:float,direction:int)->void:
-    if dead: return
+    if dead:return
     if combat.apply_hit(attacker_id,attacker_team,weapon_data,knockback):
+        last_attacker=attacker_id
         knockback_velocity=Vector2(direction*knockback,0)
         player_hit.emit(player_id)
-func respawn(at:Vector2)->void:
+func respawn(at:Vector2,as_final:=false)->void:
     global_position=at
     dead=false
     visible=true
+    collision_layer=2
     combat.revive()
+    if as_final:
+        life.consume_final_life()
+        combat.hit_count=0
+    if visual:visual.visible=true
+func _on_hurtbox_hit(attacker_id:int,weapon:ArenaWeaponData,knockback:float)->void:
+    if dead:return
+    var attacker_team:=team
+    var attacker_node=get_tree().get_first_node_in_group("player_%d"%attacker_id)
+    if attacker_node:attacker_team=int(attacker_node.team)
+    if attacker_team==team:return
+    receive_attack(attacker_id,attacker_team,weapon,knockback,signf(global_position.x-(attacker_node.global_position.x if attacker_node else global_position.x)))
 func _on_attack_started(weapon_type:int)->void:
-    if visual: visual.trigger_attack(weapon_type)
+    if visual:visual.trigger_attack(weapon_type)
     player_attacked.emit(player_id,weapon_type)
-func _on_damage_taken(attacker_id:int,weapon_type:int)->void:
-    if visual: visual.hit_flash()
+func _on_damage_taken(_attacker_id:int,_weapon_type:int)->void:
+    if visual:visual.hit_flash()
 func _on_defeated(attacker_id:int)->void:
+    if dead:return
     dead=true
+    last_attacker=attacker_id
+    collision_layer=0
     visible=false
     player_defeated.emit(player_id,attacker_id)
