@@ -290,30 +290,67 @@ func get_attack_progress() -> float:
     return clampf(elapsed / attack_total, 0.0, 1.0)
 
 func _draw() -> void:
-    var body := Color("#8d2637") if is_player else Color("#333943")
-    var trim := Color("#d6b36a")
-    var metal := Color("#cfd5dc")
-    var dark := Color("#171a20")
-    draw_ellipse(Vector2(0, 28), Vector2(31, 10), Color(0,0,0,0.32))
-    draw_rect(Rect2(-15, -5, 30, 34), body)
-    draw_rect(Rect2(-18, 5, 36, 7), trim)
-    draw_circle(Vector2(0,-28), 15, Color("#c98e69"))
-    draw_arc(Vector2(0,-28), 16, PI, TAU, 20, dark, 7.0)
-    draw_line(Vector2(-11, 8), Vector2(-18, 28), dark, 9.0)
-    draw_line(Vector2(11, 8), Vector2(18, 28), dark, 9.0)
-    draw_line(Vector2(8*facing, -12), Vector2(26*facing, -20), Color("#c98e69"), 8.0)
-    var angle := 0.0
+    var primary := Color("#7d2536") if is_player else Color("#343b46")
+    var secondary := Color("#c4a46c") if is_player else Color("#78818d")
+    var steel := Color("#d4d8dc")
+    var shadow := Color("#11151b")
+    var leather := Color("#241c1a")
+
+    # Ground contact.
+    draw_ellipse(Vector2(0, 29), Vector2(36, 11), Color(0, 0, 0, 0.34))
+
+    # Legs and boots.
+    draw_line(Vector2(-11, 10), Vector2(-19, 31), shadow, 11.0, true)
+    draw_line(Vector2(11, 10), Vector2(19, 31), shadow, 11.0, true)
+    draw_line(Vector2(-20, 30), Vector2(-8, 30), leather, 7.0, true)
+    draw_line(Vector2(8, 30), Vector2(20, 30), leather, 7.0, true)
+
+    # Layered torso armor.
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(-18, -8), Vector2(18, -8), Vector2(23, 20),
+        Vector2(11, 30), Vector2(-11, 30), Vector2(-23, 20)
+    ]), primary)
+    draw_rect(Rect2(-16, 4, 32, 8), secondary)
+    draw_line(Vector2(0, -5), Vector2(0, 26), Color(1, 1, 1, 0.18), 2.0)
+    draw_rect(Rect2(-13, 18, 26, 5), leather)
+
+    # Pauldrons.
+    draw_circle(Vector2(-21, -3), 10, secondary)
+    draw_circle(Vector2(21, -3), 10, secondary)
+    draw_arc(Vector2(-21, -3), 11, PI * 0.1, PI * 0.9, 12, steel, 2.0)
+    draw_arc(Vector2(21, -3), 11, PI * 0.1, PI * 0.9, 12, steel, 2.0)
+
+    # Head, neck and helmet.
+    draw_rect(Rect2(-7, -18, 14, 9), leather)
+    draw_circle(Vector2(0, -30), 16, Color("#b97f62"))
+    draw_arc(Vector2(0, -31), 17, PI, TAU, 18, shadow, 8.0)
+    draw_rect(Rect2(-17, -33, 34, 8), steel)
+    draw_rect(Rect2(-14, -40, 28, 7), primary)
+    draw_line(Vector2(-12, -28), Vector2(12, -28), steel, 3.0)
+    draw_rect(Rect2(4 * facing, -27, 11 * facing, 3), shadow)
+
+    # Weapon hand and guard.
+    draw_circle(Vector2(25 * facing, -18), 7, Color("#b97f62"))
+    var angle := deg_to_rad(-8.0 * facing)
     if attack != null:
         angle = _current_attack_angle()
-    else:
-        angle = deg_to_rad(-5.0 * facing)
-    var tip := _weapon_tip_at(angle)
-    draw_line(Vector2(26*facing,-20), tip, metal, 7.0, true)
-    draw_line(tip, tip + Vector2(8*facing,0), trim, 3.0, true)
+    var local_tip := _weapon_tip_at(angle)
+    draw_line(Vector2(27 * facing, -18), local_tip, steel, 8.0, true)
+    draw_line(Vector2(27 * facing, -18), local_tip, Color("#f3f0e8", 0.55), 2.0, true)
+    var guard_center := Vector2(30 * facing, -18)
+    draw_line(guard_center + Vector2(0, -8), guard_center + Vector2(0, 8), secondary, 5.0, true)
+    draw_circle(local_tip, 3.0, Color("#f0d38a", 0.8))
+
+    # Defensive read.
     if state == State.BLOCK:
-        draw_arc(Vector2(18*facing,-5), 42, -1.2, 1.2, 18, Color(0.75,0.85,1.0,0.85), 7.0)
+        draw_arc(Vector2(20 * facing, -5), 48, -1.25, 1.25, 24, Color(0.78, 0.86, 0.95, 0.72), 5.0)
+        if parry_clock > 0.0:
+            draw_arc(Vector2(20 * facing, -5), 55, -1.0, 1.0, 20, Color(0.92, 0.78, 0.45, 0.9), 4.0)
+    elif counter_armed:
+        draw_arc(Vector2(0, -28), 23, 0.15, PI - 0.15, 18, Color(0.85, 0.72, 0.4, 0.8), 3.0)
+
     if state == State.STAGGER:
-        draw_circle(Vector2(0,-52), 4, Color("#f2c14e"))
+        draw_circle(Vector2(0, -55), 4.0, Color("#e2b24e"))
 
 func draw_ellipse(center: Vector2, radius: Vector2, color: Color) -> void:
     var points := PackedVector2Array()
