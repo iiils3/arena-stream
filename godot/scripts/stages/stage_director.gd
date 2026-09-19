@@ -45,6 +45,9 @@ func _process(delta: float) -> void:
     if round_clock >= ROUND_LIMIT:
         _fail_stage()
 
+func fail_current_stage() -> void:
+    _fail_stage()
+
 func register_normal_kill() -> void:
     if not running:
         return
