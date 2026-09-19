@@ -139,8 +139,11 @@ func _spawn_weapon_loot() -> void:
         [ArenaWeaponData.WeaponType.BOW, Vector2(1120,730)]
     ]
 
-    for entry in layouts:
+    for index in range(layouts.size()):
+        var entry = layouts[index]
         var pickup = pickup_scene.instantiate()
+        pickup.pickup_id = index
+        pickup.team_owner = 0 if index < 8 else 1
         pickup.weapon_type = entry[0]
         pickup.position = entry[1]
         $Pickups.add_child(pickup)
