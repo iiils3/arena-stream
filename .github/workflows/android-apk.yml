@@ -1,0 +1,47 @@
+name: Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["godot-foundation"]
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          java-version: "17"
+          distribution: temurin
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: "platform-tools platforms;android-35 build-tools;35.0.0"
+
+      - name: Export Android APK
+        uses: firebelley/godot-export@v8.0.0
+        with:
+          godot_executable_download_url: https://downloads.tuxfamily.org/godotengine/4.5.1/Godot_v4.5.1-stable_linux.x86_64.zip
+          godot_export_templates_download_url: https://downloads.tuxfamily.org/godotengine/4.5.1/Godot_v4.5.1-stable_export_templates.tpz
+          relative_project_path: ./godot
+          use_preset_export_path: true
+          presets_to_export: Android
+          verbose: true
+
+      - name: Verify APK
+        run: |
+          test -s godot/build/ArenaStream.apk
+          ls -lh godot/build/ArenaStream.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ArenaStream-Android-APK
+          path: godot/build/ArenaStream.apk
+          if-no-files-found: error
+          retention-days: 14
