@@ -89,8 +89,10 @@ func _run() -> void:
         _fail("feint must cancel an early attack")
         return
 
+    enemy.global_position = player.global_position + Vector2(58.0, 0.0)
     enemy.state = ArenaMeleeFighter.State.BLOCK
     enemy.block_held = true
+    player.facing = 1
     player.state = ArenaMeleeFighter.State.READY
     if not player.kick():
         _fail("kick should start from ready state")
