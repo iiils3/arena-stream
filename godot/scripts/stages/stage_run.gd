@@ -26,6 +26,7 @@ var enemies: Array[ArenaMeleeFighter] = []
 var player_names: Array[String] = []
 var player_lives: Dictionary = {}
 var player_slots: Array[String] = ["", "", "", ""]
+var fighter_slots: Dictionary = {}
 var prepared_intermission := false
 var local_player: ArenaMeleeFighter
 var pulse := 0.0
@@ -95,6 +96,7 @@ func _spawn_team() -> void:
         if is_instance_valid(fighter):
             fighter.queue_free()
     players.clear()
+    fighter_slots.clear()
     local_player = null
 
     for slot in TEAM_SIZE:
@@ -108,6 +110,7 @@ func _spawn_team() -> void:
         fighter.position = PLAYER_SPAWN[slot]
         add_child(fighter)
         fighter.defeated.connect(_on_player_defeated)
+        fighter_slots[fighter] = slot
         players.append(fighter)
 
         if slot == 0:
@@ -180,7 +183,7 @@ func _on_enemy_defeated(enemy: ArenaMeleeFighter, attacker: ArenaMeleeFighter) -
         enemy.queue_free()
 
 func _on_player_defeated(fighter: ArenaMeleeFighter, _attacker: ArenaMeleeFighter) -> void:
-    var slot := players.find(fighter)
+    var slot := int(fighter_slots.get(fighter, -1))
     if slot < 0 or slot >= TEAM_SIZE:
         return
 
