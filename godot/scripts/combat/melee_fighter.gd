@@ -76,7 +76,7 @@ func _tick_state(delta: float) -> void:
         if state == State.WINDUP:
             state = State.ACTIVE
             attack_clock = attack.active
-            last_weapon_tip = _weapon_tip_at(attack_start_angle)
+            last_weapon_tip = global_position + _weapon_tip_at(attack_start_angle)
             attack_hit_targets.clear()
             state_changed.emit("active")
         elif state == State.ACTIVE:
@@ -187,7 +187,7 @@ func receive_melee_hit(attacker: ArenaMeleeFighter, incoming: ArenaMeleeAttack, 
 func resolve_active_hit(targets: Array[Node]) -> void:
     if state != State.ACTIVE or attack == null:
         return
-    var current_tip := _weapon_tip_at(_current_attack_angle())
+    var current_tip := global_position + _weapon_tip_at(_current_attack_angle())
     for target in targets:
         if target == self or not is_instance_valid(target) or not target is ArenaMeleeFighter:
             continue
