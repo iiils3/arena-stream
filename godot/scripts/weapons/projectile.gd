@@ -25,3 +25,6 @@ func _physics_process(delta:float)->void:
         hurt.receive_hit(owner_id,owner_team,weapon_data,weapon_data.knockback)
         queue_free()
     if global_position.x < -300.0 or global_position.x > 2100.0:queue_free()
+
+func _draw()->void:
+    draw_line(Vector2(-12,0),Vector2(12,0),Color("#d8dce2"),3.0,true)
