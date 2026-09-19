@@ -77,6 +77,15 @@ func force_defeat(attacker_id: int) -> bool:
     defeated.emit(attacker_id)
     return true
 
+func apply_nonlethal_hit(attacker_id: int = -1) -> bool:
+    if state == State.DEFEATED:
+        return false
+
+    last_attacker = attacker_id
+    hit_count = mini(hit_count + 1, maxi(0, weapon.hits_to_kill - 1))
+    damage_taken.emit(attacker_id, weapon.weapon_type)
+    return true
+
 func revive() -> void:
     state = State.READY
     attack_cooldown = 0.0
