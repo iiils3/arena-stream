@@ -25,6 +25,9 @@ func _ready() -> void:
     enemy.defeated.connect(_on_defeated)
     player.ai_target = enemy
     enemy.ai_target = player
+    var bot := preload("res://scripts/ai/melee_bot.gd").new()
+    bot.fighter_path = NodePath("../Fighter")
+    enemy.add_child(bot)
     queue_redraw()
 
 func _process(delta: float) -> void:
