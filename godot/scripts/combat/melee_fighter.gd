@@ -182,7 +182,7 @@ func kick() -> bool:
     queue_redraw()
     return true
 
-func resolve_kick_hit(targets: Array[Node]) -> void:
+func resolve_kick_hit(targets: Array) -> void:
     if state != State.ACTIVE or kick_clock <= 0.0:
         return
     var kick_origin := global_position + Vector2(42.0 * facing, -4.0)
@@ -286,7 +286,7 @@ func receive_melee_hit(attacker: ArenaMeleeFighter, incoming: ArenaMeleeAttack, 
         defeated.emit(self, attacker)
     return true
 
-func resolve_active_hit(targets: Array[Node]) -> void:
+func resolve_active_hit(targets: Array) -> void:
     if state != State.ACTIVE or attack == null:
         return
     var current_tip := global_position + _weapon_tip_at(_current_attack_angle())
