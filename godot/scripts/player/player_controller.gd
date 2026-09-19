@@ -46,6 +46,7 @@ func _ready() -> void:
     add_child(life)
 
     combat.attack_started.connect(_on_attack_started)
+    combat.attack_active.connect(_on_attack_active)
     combat.damage_taken.connect(_on_damage_taken)
     combat.defeated.connect(_on_defeated)
 
@@ -203,7 +204,7 @@ func _on_hurtbox_hit(
 func _on_attack_started(weapon_type: int) -> void:
     last_meaningful_activity = Time.get_ticks_msec() / 1000.0
     if visual:
-        visual.trigger_attack(weapon_type)
+        visual.trigger_attack(weapon_type, combat.attack_data.windup, combat.attack_data.active, combat.attack_data.recovery)
 
     var data: ArenaWeaponData = combat.weapon
     if weapon_type == ArenaWeaponData.WeaponType.BOW:
@@ -212,6 +213,13 @@ func _on_attack_started(weapon_type: int) -> void:
         _spawn_melee_hitbox(data)
 
     player_attacked.emit(player_id, weapon_type)
+
+func _on_attack_active(weapon_type: int) -> void:
+    var data: ArenaWeaponData = combat.weapon
+    if weapon_type == ArenaWeaponData.WeaponType.BOW:
+        _spawn_arrow(data)
+    else:
+        _spawn_melee_hitbox(data)
 
 func _spawn_melee_hitbox(data: ArenaWeaponData) -> void:
     var hitbox := ArenaHitbox.new()
