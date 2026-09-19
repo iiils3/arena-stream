@@ -14,6 +14,6 @@ static func resolve(attacker:Node,players:Array[Node])->void:
         if absf(delta.y)>70.0: continue
         var facing:int=int(attacker.get("facing"))
         var forward:=delta.x*facing
-        if forward>0.0 and forward<=data.range:
+        if forward>0.0 and forward<=data.attack_range:
             target.receive_attack(attacker.player_id,attacker.team,data,data.knockback,facing)
             combat.hit_confirmed.emit(target.player_id,data.weapon_type)
