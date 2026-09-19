@@ -24,12 +24,3 @@ renderer/rendering_method.mobile="gl_compatibility"
 2d_physics/layer_3="Hitboxes"
 2d_physics/layer_4="Hurtboxes"
 2d_physics/layer_5="Pickups"
-
-[input]
-move_left={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":65)]}
-move_right={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":68)]}
-move_up={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":87)]}
-move_down={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":83)]}
-light_attack={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":74)]}
-heavy_attack={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":75)]}
-dodge={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":76)]}
