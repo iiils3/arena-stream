@@ -358,67 +358,102 @@ func get_attack_progress() -> float:
     return clampf(elapsed / attack_total, 0.0, 1.0)
 
 func _draw() -> void:
-    var primary := Color("#7d2536") if is_player else Color("#343b46")
-    var secondary := Color("#c4a46c") if is_player else Color("#78818d")
-    var steel := Color("#d4d8dc")
+    var primary := Color("#7f2637") if is_player else Color("#343a43")
+    var primary_dark := Color("#4d1724") if is_player else Color("#222830")
+    var metal := Color("#c7cbd0")
+    var metal_high := Color("#eef0f1")
+    var leather := Color("#2a211d")
+    var skin := Color("#b98063")
     var shadow := Color("#11151b")
-    var leather := Color("#241c1a")
+    var accent := Color("#c5a16a") if is_player else Color("#727b86")
 
-    # Ground contact.
-    draw_ellipse(Vector2(0, 29), Vector2(36, 11), Color(0, 0, 0, 0.34))
+    # Contact shadow and a restrained directional silhouette.
+    draw_ellipse(Vector2(0, 31), Vector2(38, 11), Color(0, 0, 0, 0.38))
 
-    # Legs and boots.
-    draw_line(Vector2(-11, 10), Vector2(-19, 31), shadow, 11.0, true)
-    draw_line(Vector2(11, 10), Vector2(19, 31), shadow, 11.0, true)
-    draw_line(Vector2(-20, 30), Vector2(-8, 30), leather, 7.0, true)
-    draw_line(Vector2(8, 30), Vector2(20, 30), leather, 7.0, true)
+    # Boots, greaves and split stance.
+    draw_line(Vector2(-11, 9), Vector2(-20, 31), shadow, 12.0, true)
+    draw_line(Vector2(11, 9), Vector2(20, 31), shadow, 12.0, true)
+    draw_line(Vector2(-20, 27), Vector2(-20, 31), metal, 4.0, true)
+    draw_line(Vector2(20, 27), Vector2(20, 31), metal, 4.0, true)
+    draw_line(Vector2(-24, 31), Vector2(-7, 31), leather, 8.0, true)
+    draw_line(Vector2(7, 31), Vector2(24, 31), leather, 8.0, true)
 
-    # Layered torso armor.
+    # Layered tunic and torso plate.
     draw_colored_polygon(PackedVector2Array([
-        Vector2(-18, -8), Vector2(18, -8), Vector2(23, 20),
-        Vector2(11, 30), Vector2(-11, 30), Vector2(-23, 20)
+        Vector2(-19, -9), Vector2(19, -9), Vector2(24, 18),
+        Vector2(12, 29), Vector2(-12, 29), Vector2(-24, 18)
+    ]), primary_dark)
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(-16, -8), Vector2(16, -8), Vector2(19, 18),
+        Vector2(10, 25), Vector2(-10, 25), Vector2(-19, 18)
     ]), primary)
-    draw_rect(Rect2(-16, 4, 32, 8), secondary)
-    draw_line(Vector2(0, -5), Vector2(0, 26), Color(1, 1, 1, 0.18), 2.0)
-    draw_rect(Rect2(-13, 18, 26, 5), leather)
+    draw_rect(Rect2(-15, 1, 30, 8), metal, true)
+    draw_line(Vector2(-14, 5), Vector2(14, 5), metal_high, 2.0)
+    draw_rect(Rect2(-13, 18, 26, 6), leather, true)
+    draw_line(Vector2(0, -3), Vector2(0, 25), Color(1, 1, 1, 0.13), 2.0)
 
-    # Pauldrons.
-    draw_circle(Vector2(-21, -3), 10, secondary)
-    draw_circle(Vector2(21, -3), 10, secondary)
-    draw_arc(Vector2(-21, -3), 11, PI * 0.1, PI * 0.9, 12, steel, 2.0)
-    draw_arc(Vector2(21, -3), 11, PI * 0.1, PI * 0.9, 12, steel, 2.0)
+    # Shoulder armor with layered rims.
+    draw_circle(Vector2(-22, -4), 11, accent)
+    draw_circle(Vector2(22, -4), 11, accent)
+    draw_arc(Vector2(-22, -4), 11, PI * 0.1, PI * 0.92, 16, metal_high, 2.0)
+    draw_arc(Vector2(22, -4), 11, PI * 0.08, PI * 0.90, 16, metal_high, 2.0)
 
-    # Head, neck and helmet.
-    draw_rect(Rect2(-7, -18, 14, 9), leather)
-    draw_circle(Vector2(0, -30), 16, Color("#b97f62"))
-    draw_arc(Vector2(0, -31), 17, PI, TAU, 18, shadow, 8.0)
-    draw_rect(Rect2(-17, -33, 34, 8), steel)
-    draw_rect(Rect2(-14, -40, 28, 7), primary)
-    draw_line(Vector2(-12, -28), Vector2(12, -28), steel, 3.0)
-    draw_rect(Rect2(4 * facing, -27, 11 * facing, 3), shadow)
+    # Neck, face and enclosed medieval helm.
+    draw_rect(Rect2(-7, -18, 14, 10), leather, true)
+    draw_circle(Vector2(0, -30), 16, skin)
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(-17, -31), Vector2(-13, -43), Vector2(0, -48),
+        Vector2(13, -43), Vector2(17, -31), Vector2(12, -22),
+        Vector2(-12, -22)
+    ]), metal)
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(-15, -34), Vector2(-11, -44), Vector2(0, -48),
+        Vector2(11, -44), Vector2(15, -34)
+    ]), primary_dark)
+    draw_rect(Rect2(-16, -31, 32, 7), metal, true)
+    draw_line(Vector2(-13, -29), Vector2(13, -29), metal_high, 2.0)
+    draw_line(Vector2(5 * facing, -27), Vector2(15 * facing, -27), shadow, 4.0)
+    draw_line(Vector2(-9, -20), Vector2(9, -20), leather, 3.0)
 
-    # Weapon hand and guard.
-    draw_circle(Vector2(25 * facing, -18), 7, Color("#b97f62"))
+    # Rear cloth tail gives movement even before full animation assets arrive.
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(-13 * facing, 5), Vector2(-25 * facing, 18),
+        Vector2(-17 * facing, 30), Vector2(-7 * facing, 15)
+    ]), primary_dark)
+
+    # Weapon hand, guard, blade and blade highlight.
+    draw_circle(Vector2(25 * facing, -18), 7, skin)
     var angle := deg_to_rad(-8.0 * facing)
     if attack != null:
         angle = _current_attack_angle()
     var local_tip := _weapon_tip_at(angle)
-    draw_line(Vector2(27 * facing, -18), local_tip, steel, 8.0, true)
-    draw_line(Vector2(27 * facing, -18), local_tip, Color("#f3f0e8", 0.55), 2.0, true)
-    var guard_center := Vector2(30 * facing, -18)
-    draw_line(guard_center + Vector2(0, -8), guard_center + Vector2(0, 8), secondary, 5.0, true)
-    draw_circle(local_tip, 3.0, Color("#f0d38a", 0.8))
+    var hand := Vector2(27 * facing, -18)
+    var blade_dir := (local_tip - hand).normalized()
+    draw_line(hand, local_tip, metal, 9.0, true)
+    draw_line(hand + blade_dir * 3.0, local_tip, metal_high, 2.0, true)
+    draw_circle(hand, 4.0, accent)
+    draw_line(hand + Vector2(0, -9), hand + Vector2(0, 9), accent, 5.0, true)
+    draw_circle(local_tip, 3.0, Color("#f1d28b", 0.85))
 
-    # Defensive read.
+    # Motion trail makes the attack read immediately on a small screen.
+    if state == State.ACTIVE or state == State.WINDUP:
+        var trail_color := Color("#e7c47e", 0.26) if is_player else Color("#c7ccd2", 0.20)
+        var trail_radius := attack.reach * 0.78 if attack else 68.0
+        draw_arc(Vector2(18 * facing, -17), trail_radius, angle - 0.55, angle + 0.38, 20, trail_color, 5.0)
+
+    # Guard/parry read.
     if state == State.BLOCK:
-        draw_arc(Vector2(20 * facing, -5), 48, -1.25, 1.25, 24, Color(0.78, 0.86, 0.95, 0.72), 5.0)
+        draw_arc(Vector2(18 * facing, -5), 48, -1.25, 1.25, 24, Color(0.78, 0.86, 0.95, 0.70), 5.0)
         if parry_clock > 0.0:
-            draw_arc(Vector2(20 * facing, -5), 55, -1.0, 1.0, 20, Color(0.92, 0.78, 0.45, 0.9), 4.0)
+            draw_arc(Vector2(18 * facing, -5), 56, -1.0, 1.0, 20, Color(0.94, 0.76, 0.40, 0.95), 5.0)
     elif counter_armed:
-        draw_arc(Vector2(0, -28), 23, 0.15, PI - 0.15, 18, Color(0.85, 0.72, 0.4, 0.8), 3.0)
+        draw_arc(Vector2(0, -29), 25, 0.12, PI - 0.12, 20, Color(0.90, 0.74, 0.37, 0.9), 4.0)
 
+    # Hit / stagger feedback.
     if state == State.STAGGER:
-        draw_circle(Vector2(0, -55), 4.0, Color("#e2b24e"))
+        draw_circle(Vector2(0, -57), 5.0, Color("#e4b24f"))
+        draw_line(Vector2(-12, -63), Vector2(-5, -70), Color("#f2d17f"), 2.0)
+        draw_line(Vector2(12, -63), Vector2(5, -70), Color("#f2d17f"), 2.0)
 
 func draw_ellipse(center: Vector2, radius: Vector2, color: Color) -> void:
     var points := PackedVector2Array()
