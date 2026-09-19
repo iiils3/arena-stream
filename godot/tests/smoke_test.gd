@@ -54,7 +54,7 @@ func _run() -> void:
     if not enemy.perform_attack(ArenaMeleeAttack.Kind.STAB):
         _fail("enemy stab should start")
         return
-    enemy._tick_state(0.12)
+    enemy._tick_state(0.13)
     if enemy.state != ArenaMeleeFighter.State.ACTIVE:
         _fail("stab must enter active state")
         return
