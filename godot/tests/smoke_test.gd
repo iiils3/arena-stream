@@ -60,6 +60,10 @@ func _run() -> void:
         _fail("stab must enter active state")
         return
 
+    player.state = ArenaMeleeFighter.State.READY
+    player.attack = null
+    player.attack_clock = 0.0
+    player.stagger_clock = 0.0
     player.set_block(true)
     var parry_result := player.receive_melee_hit(enemy, enemy.attack, player.global_position)
     if not parry_result or player.state != ArenaMeleeFighter.State.READY:
