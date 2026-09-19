@@ -118,6 +118,48 @@ func _run() -> void:
         _fail("dodge must provide a short invulnerability window")
         return
 
-    print("ARENA COMBAT SMOKE TEST PASSED")
     showcase.queue_free()
+
+    var stage_scene := preload("res://scenes/stages/stage_run.tscn")
+    var stage = stage_scene.instantiate()
+    stage.process_mode = Node.PROCESS_MODE_DISABLED
+    root.add_child(stage)
+    await process_frame
+    await process_frame
+
+    if stage.players.size() != 4:
+        _fail("stage run must start with four fighters")
+        return
+    if stage.enemies.size() != 8:
+        _fail("stage 1 must spawn eight enemies")
+        return
+
+    var survivor = stage.players[0]
+    var survivor_health := survivor.health
+
+    for _i in range(8):
+        stage.stage_director.register_normal_kill()
+
+    if not stage.stage_director.intermission:
+        _fail("cleared stage must enter intermission")
+        return
+
+    stage._process(0.01)
+    if stage.players.size() != 4:
+        _fail("survivors must remain present during intermission")
+        return
+    if stage.players[0] != survivor or survivor.health != survivor_health:
+        _fail("stage transition must preserve surviving fighters")
+        return
+
+    stage.stage_director._process(60.0)
+    if stage.stage_director.get_current_stage().stage_id != 2:
+        _fail("intermission must advance to stage 2")
+        return
+    if stage.enemies.size() != 10:
+        _fail("stage 2 must spawn ten enemies")
+        return
+
+    print("ARENA COMBAT + STAGE LIFECYCLE SMOKE TEST PASSED")
+    stage.queue_free()
     quit(0)
