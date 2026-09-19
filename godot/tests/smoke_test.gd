@@ -122,6 +122,7 @@ func _run() -> void:
 
     var stage_scene := preload("res://scenes/stages/stage_run.tscn")
     var stage = stage_scene.instantiate()
+    stage.process_mode = Node.PROCESS_MODE_DISABLED
     root.add_child(stage)
     await process_frame
     await process_frame
