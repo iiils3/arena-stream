@@ -129,6 +129,47 @@ func _spawn_team() -> void:
             add_child(hud)
         hud.get_node("Controls").bind_fighter(local_player)
 
+
+func _spawn_missing_team_members() -> void:
+    for slot in TEAM_SIZE:
+        var name := player_slots[slot]
+        if name.is_empty():
+            continue
+
+        var existing := false
+        for fighter in players:
+            if not is_instance_valid(fighter):
+                continue
+            if int(fighter_slots.get(fighter, -1)) == slot and fighter.state != ArenaMeleeFighter.State.DEFEATED:
+                existing = true
+                break
+        if existing:
+            continue
+
+        var fighter: ArenaMeleeFighter = fighter_scene.instantiate()
+        fighter.fighter_name = name.to_upper()
+        fighter.is_player = slot == 0
+        fighter.position = PLAYER_SPAWN[slot]
+        add_child(fighter)
+        fighter.defeated.connect(_on_player_defeated)
+        fighter_slots[fighter] = slot
+        players.append(fighter)
+
+        if slot == 0:
+            local_player = fighter
+        else:
+            var bot := ally_bot_script.new()
+            bot.fighter_path = NodePath("..")
+            fighter.add_child(bot)
+
+    if is_instance_valid(local_player):
+        var hud := get_node_or_null("MobileCombatHUD")
+        if hud == null:
+            hud = hud_scene.instantiate()
+            hud.name = "MobileCombatHUD"
+            add_child(hud)
+        hud.get_node("Controls").bind_fighter(local_player)
+
 func _spawn_enemies(count: int) -> void:
     for enemy in enemies:
         if is_instance_valid(enemy):
@@ -212,7 +253,7 @@ func _prepare_intermission_team() -> void:
     else:
         player_slots = player_queue.replace_missing_slots()
 
-    _spawn_team()
+    _spawn_missing_team_members()
 
 func _active_players() -> Array[ArenaMeleeFighter]:
     var result: Array[ArenaMeleeFighter] = []
