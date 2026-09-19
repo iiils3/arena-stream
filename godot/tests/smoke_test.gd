@@ -59,6 +59,21 @@ func _run() -> void:
         _fail("stab must enter active state")
         return
 
+    player.set_block(true)
+    var parry_result := player.receive_melee_hit(enemy, enemy.attack, player.global_position)
+    if not parry_result or player.state != ArenaMeleeFighter.State.READY:
+        _fail("timed block must parry an incoming active attack")
+        return
+    if not player.counter_armed:
+        _fail("successful parry must open a short counter window")
+        return
+    if not player.perform_attack(ArenaMeleeAttack.Kind.OVERHEAD):
+        _fail("counter attack should start during the counter window")
+        return
+    if player.attack.damage <= ArenaMeleeAttack.for_kind(ArenaMeleeAttack.Kind.OVERHEAD).damage:
+        _fail("counter attack must carry a damage advantage")
+        return
+
     var stamina_before := player.stamina
     if not player.dodge(Vector2.RIGHT):
         _fail("dodge should consume stamina and start")
