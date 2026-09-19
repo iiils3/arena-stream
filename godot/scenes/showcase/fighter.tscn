@@ -1,7 +1,6 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=2 format=3]
 
 [ext_resource path="res://scripts/combat/melee_fighter.gd" type="Script" id="1"]
-[ext_resource path="res://scripts/ai/melee_bot.gd" type="Script" id="2"]
 
 [sub_resource type="CapsuleShape2D" id="Body"]
 radius = 22.0
@@ -15,7 +14,3 @@ collision_mask = 0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("Body")
 position = Vector2(0,-2)
-
-[node name="Bot" type="Node" parent="."]
-script = ExtResource("2")
-fighter_path = NodePath("..")
