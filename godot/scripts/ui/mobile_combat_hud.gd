@@ -16,7 +16,7 @@ var action_rects := {
 var pressed := {}
 
 func _ready() -> void:
-    layer = 20
+    z_index = 20
     set_process_input(true)
     queue_redraw()
 
