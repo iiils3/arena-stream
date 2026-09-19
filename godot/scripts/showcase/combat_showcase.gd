@@ -2,6 +2,7 @@ extends Node2D
 class_name ArenaCombatShowcase
 
 var fighter_scene := preload("res://scenes/showcase/fighter.tscn")
+var hud_scene := preload("res://scenes/showcase/mobile_hud.tscn")
 var player: ArenaMeleeFighter
 var enemy: ArenaMeleeFighter
 var elapsed := 0.0
@@ -25,6 +26,9 @@ func _ready() -> void:
     enemy.defeated.connect(_on_defeated)
     player.ai_target = enemy
     enemy.ai_target = player
+    var hud := hud_scene.instantiate()
+    add_child(hud)
+    hud.get_node("Controls").bind_fighter(player)
     var bot := preload("res://scripts/ai/melee_bot.gd").new()
     bot.fighter_path = NodePath("..")
     enemy.add_child(bot)
