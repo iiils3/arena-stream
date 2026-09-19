@@ -38,6 +38,8 @@ var weapon_tip := Vector2.ZERO
 var ai_target: Node2D
 var combat_radius := 42.0
 var mobile_move_input := Vector2.ZERO
+var feint_cooldown := 0.0
+var kick_clock := 0.0
 
 func _ready() -> void:
     health = max_health
@@ -50,6 +52,7 @@ func _physics_process(delta: float) -> void:
     _recover_stamina(delta)
     parry_clock = maxf(0.0, parry_clock - delta)
     counter_clock = maxf(0.0, counter_clock - delta)
+    feint_cooldown = maxf(0.0, feint_cooldown - delta)
     if counter_clock == 0.0:
         counter_armed = false
     _tick_state(delta)
@@ -65,6 +68,11 @@ func _recover_stamina(delta: float) -> void:
     stamina = clampf(stamina + rate * delta, 0.0, max_stamina)
 
 func _tick_state(delta: float) -> void:
+    if kick_clock > 0.0:
+        kick_clock = maxf(0.0, kick_clock - delta)
+        if kick_clock == 0.0:
+            state = State.READY
+        return
     if dodge_clock > 0.0:
         dodge_clock = maxf(0.0, dodge_clock - delta)
         if dodge_clock == 0.0:
@@ -143,6 +151,60 @@ func perform_attack(kind: int) -> bool:
     state_changed.emit("windup")
     queue_redraw()
     return true
+
+func feint() -> bool:
+    if state != State.WINDUP or attack == null or feint_cooldown > 0.0:
+        return false
+    var refund := attack.stamina_cost * 0.35
+    stamina = minf(max_stamina, stamina + refund)
+    attack = null
+    attack_clock = 0.0
+    attack_hit_targets.clear()
+    state = State.READY
+    feint_cooldown = 0.22
+    state_changed.emit("feint")
+    queue_redraw()
+    return true
+
+func kick() -> bool:
+    if state != State.READY or stamina < 16.0:
+        return false
+    stamina -= 16.0
+    kick_clock = 0.22
+    state = State.ACTIVE
+    state_changed.emit("kick")
+    queue_redraw()
+    return true
+
+func resolve_kick_hit(targets: Array[Node]) -> void:
+    if state != State.ACTIVE or kick_clock <= 0.0:
+        return
+    var kick_origin := global_position + Vector2(42.0 * facing, -4.0)
+    for target in targets:
+        if target == self or not is_instance_valid(target) or not target is ArenaMeleeFighter:
+            continue
+        if target.state == State.DEFEATED:
+            continue
+        if kick_origin.distance_to(target.global_position) > 86.0:
+            continue
+        target._receive_kick()
+    kick_clock = -1.0
+    state = State.RECOVERY
+    attack_clock = 0.28
+
+func _receive_kick() -> void:
+    if state == State.BLOCK:
+        block_held = false
+        parry_clock = 0.0
+        stamina = maxf(0.0, stamina - 32.0)
+        state = State.STAGGER
+        stagger_clock = 0.5 if stamina > 0.0 else 0.7
+        state_changed.emit("kick_guard_break")
+        return
+    velocity = Vector2(facing * 115.0, -45.0)
+    state = State.STAGGER
+    stagger_clock = 0.34
+    state_changed.emit("kicked")
 
 func set_block(pressed: bool) -> void:
     if state == State.DEFEATED or state == State.WINDUP or state == State.ACTIVE or state == State.RECOVERY:
