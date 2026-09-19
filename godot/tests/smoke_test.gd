@@ -45,6 +45,24 @@ func _run() -> void:
         _fail("each team must have exactly 2 male fighters")
         return
 
+    var attack_probe := ArenaCombatController.new()
+    attack_probe.equip(ArenaWeaponData.sword())
+    if not attack_probe.try_attack() or attack_probe.state != ArenaCombatController.State.WINDUP:
+        _fail("attack must enter windup state")
+        return
+    attack_probe.tick(0.10)
+    if attack_probe.state != ArenaCombatController.State.ACTIVE:
+        _fail("attack must enter active state after windup")
+        return
+    attack_probe.tick(0.13)
+    if attack_probe.state != ArenaCombatController.State.RECOVERY:
+        _fail("attack must enter recovery after active window")
+        return
+    attack_probe.tick(0.30)
+    if attack_probe.state != ArenaCombatController.State.READY:
+        _fail("attack must return to ready after recovery")
+        return
+
     var sword := ArenaWeaponData.sword()
     var spear := ArenaWeaponData.spear()
     var bow := ArenaWeaponData.bow()
