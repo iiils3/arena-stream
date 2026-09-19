@@ -323,6 +323,9 @@ func _unhandled_input(event: InputEvent) -> void:
                 local_player.kick()
             KEY_F:
                 local_player.feint()
+            KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6:
+                if audience_director.vote_open:
+                    audience_director.submit_vote(event.keycode - KEY_1)
     if event is InputEventKey and not event.pressed and event.keycode == KEY_SPACE:
         local_player.set_block(false)
 
@@ -480,7 +483,7 @@ func _draw() -> void:
             draw_string(ThemeDB.fallback_font, Vector2(1415, 225), "AUDIENCE VOTE", HORIZONTAL_ALIGNMENT_LEFT, -1, 21, Color("#eee7da"))
             draw_string(ThemeDB.fallback_font, Vector2(1415, 252), "CHOOSE AN EVENT  •  %02d SEC" % audience_director.get_vote_seconds(), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("#a48a62"))
             var counts := audience_director.get_vote_counts()
-            for i in options.size():
+            for i in audience_director.options.size():
                 var event: ArenaAudienceEvent = audience_director.options[i]
                 draw_string(ThemeDB.fallback_font, Vector2(1418, 284 + i * 34), "%d  %s" % [i + 1, event.display_name], HORIZONTAL_ALIGNMENT_LEFT, 300, 14, Color("#d9d1c4"))
                 draw_string(ThemeDB.fallback_font, Vector2(1795, 284 + i * 34), "%02d" % counts[i], HORIZONTAL_ALIGNMENT_LEFT, 35, 14, Color("#c7a36e"))
