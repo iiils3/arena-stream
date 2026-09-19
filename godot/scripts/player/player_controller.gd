@@ -4,6 +4,13 @@ class_name ArenaPlayerController
 signal player_attacked(player_id: int, weapon_type: int)
 signal player_hit(player_id: int)
 signal player_defeated(player_id: int, attacker_id: int)
+signal falcon_triggered(player_id: int)
+
+const FALCON_TIMEOUT := 30.0
+const COMBAT_ZONE := Rect2(430.0, 365.0, 1060.0, 330.0)
+
+var last_meaningful_activity := 0.0
+var outside_zone_since := -1.0
 
 @export var walk_speed := 220.0
 @export var acceleration := 1000.0
@@ -53,6 +60,8 @@ func _ready() -> void:
     if visual:
         visual.set_state(team, gender, facing, combat.weapon.weapon_type)
 
+    last_meaningful_activity = Time.get_ticks_msec() / 1000.0
+
 func _physics_process(delta: float) -> void:
     if combat:
         combat.tick(delta)
@@ -64,6 +73,7 @@ func _physics_process(delta: float) -> void:
         move_and_slide()
         return
 
+    var now := Time.get_ticks_msec() / 1000.0
     var input_vector := Vector2(
         Input.get_axis("ui_left", "ui_right"),
         Input.get_axis("ui_up", "ui_down")
@@ -71,6 +81,21 @@ func _physics_process(delta: float) -> void:
 
     var dodge_pressed := Input.is_key_pressed(KEY_L)
     var attack_pressed := Input.is_key_pressed(KEY_J)
+
+    if input_vector.length() > 0.05 or dodge_pressed or attack_pressed:
+        last_meaningful_activity = now
+
+    if not COMBAT_ZONE.has_point(global_position):
+        if outside_zone_since < 0.0:
+            outside_zone_since = now
+    else:
+        outside_zone_since = -1.0
+
+    if (
+        now - last_meaningful_activity >= FALCON_TIMEOUT
+        or (outside_zone_since >= 0.0 and now - outside_zone_since >= FALCON_TIMEOUT)
+    ):
+        _trigger_falcon(now)
 
     if dodge_pressed and not last_dodge_pressed and input_vector.length() > 0.0:
         dodge_direction = input_vector
@@ -176,6 +201,7 @@ func _on_hurtbox_hit(
     )
 
 func _on_attack_started(weapon_type: int) -> void:
+    last_meaningful_activity = Time.get_ticks_msec() / 1000.0
     if visual:
         visual.trigger_attack(weapon_type)
 
@@ -226,8 +252,18 @@ func _spawn_arrow(data: ArenaWeaponData) -> void:
     get_parent().add_child(arrow)
 
 func _on_damage_taken(_attacker_id: int, _weapon_type: int) -> void:
+    last_meaningful_activity = Time.get_ticks_msec() / 1000.0
     if visual:
         visual.hit_flash()
+
+func _trigger_falcon(now: float) -> void:
+    if dead:
+        return
+
+    if combat.apply_nonlethal_hit(-1):
+        last_meaningful_activity = now
+        outside_zone_since = -1.0
+        falcon_triggered.emit(player_id)
 
 func _on_defeated(attacker_id: int) -> void:
     if dead:
