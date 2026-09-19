@@ -125,7 +125,7 @@ func perform_attack(kind: int) -> bool:
     attack_total = attack.windup + attack.active + attack.recovery
     attack_start_angle = _attack_start_angle(kind)
     attack_end_angle = _attack_end_angle(kind)
-    last_weapon_tip = _weapon_tip_at(attack_start_angle)
+    last_weapon_tip = global_position + _weapon_tip_at(attack_start_angle)
     attack_hit_targets.clear()
     state_changed.emit("windup")
     queue_redraw()
