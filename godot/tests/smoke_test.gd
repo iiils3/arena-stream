@@ -66,10 +66,18 @@ func _run() -> void:
         _fail("friendly fire must be disabled")
         return
 
-    var pickups := arena.get_node("Pickups").get_child_count()
+    var pickups_node := arena.get_node("Pickups")
+    var pickups := pickups_node.get_child_count()
     if pickups != 16:
         _fail("expected 16 weapon pickups, got %d" % pickups)
         return
+
+    for i in range(16):
+        var pickup = pickups_node.get_child(i)
+        var expected_team := 0 if i < 8 else 1
+        if int(pickup.team_owner) != expected_team:
+            _fail("pickup %d has wrong team owner" % i)
+            return
 
     var life := ArenaLifeSystem.new()
     life.on_death(100.0)
@@ -92,6 +100,13 @@ func _run() -> void:
     life.consume_final_life()
     if life.eliminated_until != 0.0:
         _fail("final-life timer was not cleared")
+        return
+
+    var final_player = arena.players[0]
+    final_player.life.final_life = true
+    final_player.receive_attack(4, 1, bow, bow.knockback, 1)
+    if not final_player.dead:
+        _fail("Final Life must be defeated by one valid hit")
         return
 
     print("ARENA SMOKE TEST PASSED")
