@@ -1,3 +1,4 @@
+
 extends CharacterBody2D
 class_name ArenaPlayerController
 signal player_attacked(player_id:int, weapon_type:int)
@@ -21,7 +22,6 @@ var visual:ArenaPlayerVisual
 var last_attack_pressed:=false
 var last_dodge_pressed:=false
 var knockback_velocity:=Vector2.ZERO
-
 func _ready()->void:
     combat=ArenaCombatController.new()
     combat.player_id=player_id
@@ -32,7 +32,6 @@ func _ready()->void:
     combat.defeated.connect(_on_defeated)
     visual=get_node_or_null("Visual") as ArenaPlayerVisual
     if visual: visual.set_state(team,gender,facing,combat.weapon.weapon_type)
-
 func _physics_process(delta:float)->void:
     if combat: combat.tick(delta)
     knockback_velocity=knockback_velocity.move_toward(Vector2.ZERO,900.0*delta)
@@ -62,26 +61,21 @@ func _physics_process(delta:float)->void:
     move_and_slide()
     global_position.y=clamp(global_position.y,depth_min,depth_max)
     z_index=int(global_position.y)
-
 func receive_attack(attacker_id:int,attacker_team:int,weapon_data:ArenaWeaponData,knockback:float,direction:int)->void:
     if dead: return
     if combat.apply_hit(attacker_id,attacker_team,weapon_data,knockback):
         knockback_velocity=Vector2(direction*knockback,0)
         player_hit.emit(player_id)
-
 func respawn(at:Vector2)->void:
     global_position=at
     dead=false
     visible=true
     combat.revive()
-
 func _on_attack_started(weapon_type:int)->void:
     if visual: visual.trigger_attack(weapon_type)
     player_attacked.emit(player_id,weapon_type)
-
 func _on_damage_taken(attacker_id:int,weapon_type:int)->void:
     if visual: visual.hit_flash()
-
 func _on_defeated(attacker_id:int)->void:
     dead=true
     visible=false
