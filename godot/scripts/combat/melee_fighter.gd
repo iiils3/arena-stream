@@ -84,6 +84,12 @@ func _tick_state(delta: float) -> void:
         if stagger_clock == 0.0:
             state = State.READY
         return
+    if state == State.ACTIVE and attack == null:
+        attack_clock -= delta
+        if attack_clock <= 0.0:
+            state = State.READY
+            state_changed.emit("ready")
+        return
     if state == State.WINDUP or state == State.ACTIVE or state == State.RECOVERY:
         attack_clock -= delta
         if attack_clock > 0.0:
