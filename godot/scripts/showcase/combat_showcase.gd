@@ -39,6 +39,8 @@ func _process(delta: float) -> void:
     if is_instance_valid(player) and is_instance_valid(enemy):
         player.resolve_active_hit([enemy])
         enemy.resolve_active_hit([player])
+        player.resolve_kick_hit([enemy])
+        enemy.resolve_kick_hit([player])
     queue_redraw()
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -57,10 +59,9 @@ func _unhandled_input(event: InputEvent) -> void:
             KEY_L:
                 player.dodge(Vector2(player.facing, 0))
             KEY_SHIFT:
-                player.set_block(false)
-                if absf(enemy.global_position.x - player.global_position.x) < 95.0:
-                    enemy.stagger_clock = 0.45
-                    enemy.state = ArenaMeleeFighter.State.STAGGER
+                player.kick()
+            KEY_F:
+                player.feint()
             KEY_R:
                 _reset_fight()
 
