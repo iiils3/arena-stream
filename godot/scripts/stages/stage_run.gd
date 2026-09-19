@@ -20,6 +20,7 @@ var enemy_bot_script := preload("res://scripts/ai/melee_bot.gd")
 var ally_bot_script := preload("res://scripts/ai/ally_bot.gd")
 
 var stage_director: ArenaStageDirector
+var audience_director: ArenaAudienceDirector
 var player_queue: ArenaPlayerQueue
 var players: Array[ArenaMeleeFighter] = []
 var enemies: Array[ArenaMeleeFighter] = []
@@ -35,6 +36,11 @@ var pulse := 0.0
 func _ready() -> void:
     stage_director = ArenaStageDirector.new()
     add_child(stage_director)
+    audience_director = ArenaAudienceDirector.new()
+    add_child(audience_director)
+    audience_director.vote_closed.connect(_on_audience_event_selected)
+    audience_director.event_started.connect(_on_audience_event_started)
+    audience_director.event_finished.connect(_on_audience_event_finished)
     player_queue = ArenaPlayerQueue.new()
     add_child(player_queue)
 
@@ -52,6 +58,7 @@ func _ready() -> void:
     player_slots = player_queue.begin_team()
     _spawn_team()
     stage_director.start_run()
+    audience_director.start_round()
     queue_redraw()
 
 func _process(delta: float) -> void:
@@ -281,6 +288,15 @@ func _nearest_target(origin: Vector2, targets: Array[ArenaMeleeFighter]) -> Aren
             best = target
     return best
 
+func _on_audience_event_selected(_event: ArenaAudienceEvent) -> void:
+    queue_redraw()
+
+func _on_audience_event_started(_event: ArenaAudienceEvent) -> void:
+    queue_redraw()
+
+func _on_audience_event_finished(_event: ArenaAudienceEvent) -> void:
+    queue_redraw()
+
 func _on_run_finished() -> void:
     for enemy in enemies:
         if is_instance_valid(enemy):
@@ -374,6 +390,10 @@ func _draw() -> void:
         draw_string(ThemeDB.fallback_font, Vector2(1115, 105), time_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 25, Color("#e8dfcf"))
 
     draw_rect(Rect2(1430, 45, 438, 122), Color(0.02, 0.03, 0.045, 0.82))
+    if audience_director != null and audience_director.active_event != null:
+        draw_rect(Rect2(1428, 178, 440, 58), Color(0.02, 0.03, 0.045, 0.88))
+        draw_string(ThemeDB.fallback_font, Vector2(1455, 201), "AUDIENCE EVENT", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("#a48a62"))
+        draw_string(ThemeDB.fallback_font, Vector2(1455, 225), "%s  /  %02d SEC" % [audience_director.active_event.display_name, audience_director.get_event_seconds()], HORIZONTAL_ALIGNMENT_LEFT, 405, 15, Color("#e8dfcf"))
     draw_string(ThemeDB.fallback_font, Vector2(1455, 78), "TEAM", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#a48a62"))
     var team_line := ""
     for slot in TEAM_SIZE:
