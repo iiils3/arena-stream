@@ -26,7 +26,7 @@ func _ready() -> void:
     player.ai_target = enemy
     enemy.ai_target = player
     var bot := preload("res://scripts/ai/melee_bot.gd").new()
-    bot.fighter_path = NodePath("../Fighter")
+    bot.fighter_path = NodePath("..")
     enemy.add_child(bot)
     queue_redraw()
 
