@@ -135,7 +135,7 @@ func _run() -> void:
         return
 
     var survivor = stage.players[0]
-    var survivor_health := survivor.health
+    var survivor_health: int = survivor.health
 
     for _i in range(8):
         stage.stage_director.register_normal_kill()
