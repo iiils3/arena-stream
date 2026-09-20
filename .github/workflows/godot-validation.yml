@@ -1,7 +1,7 @@
 name: Godot validation
 on:
   push:
-    branches: ["godot-foundation"]
+    branches: ["godot-foundation", "3d-vertical-slice"]
   pull_request:
     branches: ["main"]
 jobs:
