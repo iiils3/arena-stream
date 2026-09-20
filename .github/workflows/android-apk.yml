@@ -32,12 +32,7 @@ jobs:
           echo "GODOT_ANDROID_KEYSTORE_DEBUG_USER=arenaDebug" >> "$GITHUB_ENV"
           echo "GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=$DEBUG_PASS" >> "$GITHUB_ENV"
           mkdir -p godot/.godot
-          cat > godot/.godot/export_credentials.cfg <<EOF
-[preset.0.options]
-keystore/debug="$DEBUG_STORE"
-keystore/debug_user="arenaDebug"
-keystore/debug_password="$DEBUG_PASS"
-EOF
+          printf '%s\n' '[preset.0.options]' 'keystore/debug="'$DEBUG_STORE'"' 'keystore/debug_user="arenaDebug"' 'keystore/debug_password="'$DEBUG_PASS'"' > godot/.godot/export_credentials.cfg
 
       - name: Export Android APK
         uses: firebelley/godot-export@v8.0.0
