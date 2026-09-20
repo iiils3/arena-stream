@@ -47,13 +47,13 @@ jobs:
 
       - name: Verify APK
         run: |
-          test -s godot/build/ArenaStream.apk
-          ls -lh godot/build/ArenaStream.apk
+          test -s godot/build/Android/ArenaStream.apk
+          ls -lh godot/build/Android/ArenaStream.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ArenaStream-Android-APK
-          path: godot/build/ArenaStream.apk
+          path: godot/build/Android/ArenaStream.apk
           if-no-files-found: error
           retention-days: 14
