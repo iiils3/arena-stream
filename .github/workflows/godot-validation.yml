@@ -1,0 +1,28 @@
+name: Godot validation
+on:
+  push:
+    branches: ["godot-foundation"]
+  pull_request:
+    branches: ["main"]
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.5.1
+          use-dotnet: false
+          include-templates: false
+      - name: Verify Godot
+        run: godot --version
+      - name: Import and parse project
+        run: godot --headless --path godot --editor --quit
+      - name: Run foundation smoke test
+        run: godot --headless --path godot --script res://tests/smoke_test.gd
+      - name: Run audience smoke test
+        run: godot --headless --path godot --script res://tests/audience_smoke_test.gd
+      - name: Boot main scene
+        run: timeout 20s godot --headless --path godot --display-driver headless --audio-driver Dummy --quit-after 120 || test $? -eq 124

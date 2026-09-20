@@ -1,0 +1,59 @@
+name: Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["godot-foundation"]
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          java-version: "17"
+          distribution: temurin
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: "platform-tools platforms;android-35 build-tools;35.0.0"
+
+      - name: Configure debug signing
+        run: |
+          DEBUG_STORE="$RUNNER_TEMP/arena-debug.keystore"
+          DEBUG_PASS="$(openssl rand -hex 16)"
+          keytool -genkeypair -v -keystore "$DEBUG_STORE" -storepass "$DEBUG_PASS" -keypass "$DEBUG_PASS" -alias arenaDebug -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Arena Stream,O=Mismar,C=IQ"
+          echo "GODOT_ANDROID_KEYSTORE_DEBUG_PATH=$DEBUG_STORE" >> "$GITHUB_ENV"
+          echo "GODOT_ANDROID_KEYSTORE_DEBUG_USER=arenaDebug" >> "$GITHUB_ENV"
+          echo "GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=$DEBUG_PASS" >> "$GITHUB_ENV"
+          mkdir -p godot/.godot
+          printf '%s\n' '[preset.0.options]' 'keystore/debug="'$DEBUG_STORE'"' 'keystore/debug_user="arenaDebug"' 'keystore/debug_password="'$DEBUG_PASS'"' > godot/.godot/export_credentials.cfg
+
+      - name: Export Android APK
+        uses: firebelley/godot-export@v8.0.0
+        with:
+          godot_executable_download_url: https://github.com/godotengine/godot/releases/download/4.5.1-stable/Godot_v4.5.1-stable_linux.x86_64.zip
+          godot_export_templates_download_url: https://github.com/godotengine/godot/releases/download/4.5.1-stable/Godot_v4.5.1-stable_export_templates.tpz
+          relative_project_path: ./godot
+          use_preset_export_path: true
+          presets_to_export: Android
+          verbose: true
+          export_debug: true
+
+      - name: Verify APK
+        run: |
+          test -s godot/build/Android/ArenaStream.apk
+          ls -lh godot/build/Android/ArenaStream.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ArenaStream-Android-APK
+          path: godot/build/Android/ArenaStream.apk
+          if-no-files-found: error
+          retention-days: 14
