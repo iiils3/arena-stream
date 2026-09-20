@@ -20,10 +20,10 @@ var rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
     rng.seed = 4217
+    _build_camera()
     _build_world()
     _build_team()
     _build_enemy_army(12)
-    _build_camera()
     _build_ui()
 
 func _process(delta: float) -> void:
@@ -119,10 +119,11 @@ func _make_banner(pos: Vector3, direction: float) -> void:
     _box("BannerPole", Vector3(0.08, 3.2, 0.08), pos + Vector3(0, -1.0, 0), Color("#8a744f"))
     var flag := MeshInstance3D.new()
     var mesh := BoxMesh.new()
-    mesh.size = Vector3(2.2 * direction, 1.3, 0.05)
+    mesh.size = Vector3(2.2, 1.3, 0.05)
     mesh.material = _mat(Color("#762d3a"))
     flag.mesh = mesh
     flag.position = pos + Vector3(0.95 * direction, -0.55, 0)
+    flag.scale.x = direction
     add_child(flag)
 
 func _make_props() -> void:
@@ -277,6 +278,8 @@ func _build_camera() -> void:
     add_child(camera)
     camera.current = true
     camera.fov = 58.0
+    camera.near = 0.05
+    camera.far = 200.0
     camera.position = Vector3(0, 12.5, 19.5)
     camera.look_at(Vector3(0, 1.1, -1.0), Vector3.UP)
 
