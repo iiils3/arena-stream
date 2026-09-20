@@ -24,3 +24,6 @@ This branch is the visual reset after the earlier 2D procedural prototype.
 - Add real combat reactions, hit effects, ragdolls and sound.
 - Add terrain/props with authored PBR materials.
 - Connect this 3D presentation to the existing stage/queue/audience runtime.
+
+
+Build gate: Android APK workflow is enabled on this branch so the visual slice can be installed and reviewed before any merge.
