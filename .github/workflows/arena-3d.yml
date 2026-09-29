@@ -1,0 +1,24 @@
+name: 3D prototype build
+on:
+  push:
+    branches: [build/arena-3d-foundation]
+    paths:
+      - 'prototype-3d/**'
+      - '.github/workflows/arena-3d.yml'
+  pull_request:
+    paths:
+      - 'prototype-3d/**'
+      - '.github/workflows/arena-3d.yml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: prototype-3d
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
