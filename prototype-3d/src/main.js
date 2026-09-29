@@ -16,14 +16,15 @@ scene.background = new THREE.Color(0x9ba9ae);
 scene.fog = new THREE.Fog(0x9ba9ae, 30, 105);
 const camera = new THREE.PerspectiveCamera(76, 1, .08, 140);
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.6));
-renderer.shadowMap.enabled = true;
+const isMobileDevice = matchMedia('(pointer: coarse)').matches;
+renderer.setPixelRatio(Math.min(devicePixelRatio, isMobileDevice ? 1 : 1.5));
+renderer.shadowMap.enabled = !isMobileDevice;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 app.prepend(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xc5e0ff, 0x5a4936, 2.1));
 const sun = new THREE.DirectionalLight(0xffe2ac, 2.3);
-sun.position.set(-15, 27, 12); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+sun.position.set(-15, 27, 12); sun.castShadow = !isMobileDevice; sun.shadow.mapSize.set(1024, 1024);
 sun.shadow.camera.left = -38; sun.shadow.camera.right = 38; sun.shadow.camera.top = 38; sun.shadow.camera.bottom = -38;
 scene.add(sun);
 const mat = (color, roughness=1) => new THREE.MeshStandardMaterial({color,roughness});
@@ -37,12 +38,17 @@ for(let i=-31;i<=31;i+=4) for(let j=-31;j<=31;j+=4) {
   if(Math.random()>.35)block(3.7,.035,3.7,i,.005,j,mat(Math.random()>.5?0x918773:0x796f5f),false);
 }
 for(const x of [-32,32]) {block(3,10,68,x,5,0);for(let z=-32;z<=32;z+=5)block(3,2,2.7,x,11,z,darkStone);}
-for(const z of [-32,32]) {block(68,10,3,0,5,z);for(let x=-32;x<=32;x+=5)block(2.7,2,3,x,11,z,darkStone);}
+for(const z of [-32,32]) {
+  if(z<0){block(27,10,3,-20.5,5,z);block(27,10,3,20.5,5,z);block(14,3,3,0,8.5,z);}
+  else block(68,10,3,0,5,z);
+  for(let x=-32;x<=32;x+=5)if(z>0||Math.abs(x)>8)block(2.7,2,3,x,11,z,darkStone);
+}
 for(const x of [-30,30])for(const z of [-30,30]) {
   block(6,13,6,x,6.5,z,darkStone);block(7,1.2,7,x,13.4,z,stone);
 }
-block(14,8,3,0,4,-31,wood);block(15,1,3,0,8.6,-31,iron);
-for(let x=-5;x<=5;x+=2)block(.15,7,.25,x,4,-29.4,iron);
+// Raised portcullis: the gate is passable, not a solid wall.
+block(14,2.5,1,0,12,-31,wood);block(15,1,3,0,13.4,-31,iron);
+for(let x=-5;x<=5;x+=2)block(.15,2,.25,x,12,-29.4,iron);
 function banner(x,z,rotation=0){
   const pole=block(.18,6,.18,x,5,z,wood);
   const cloth=block(2.6,3,.09,x+1.3,5.8,z,mat(0x403e36));
@@ -74,12 +80,14 @@ enemyPart(.3,.8,.35,1.34,darkStone,-.65);enemyPart(.3,.8,.35,1.34,darkStone,.65)
 enemyPart(.8,.14,.2,1.85,gold);enemyPart(.12,1.5,.12,1.1,mat(0xb5b8b5),.95,.1);
 detailEnemy(enemy);
 scene.add(enemy);
-const visualDetails = addCastleDetail(scene, { mobile: matchMedia('(pointer: coarse)').matches });
+const visualDetails = addCastleDetail(scene, { mobile: isMobileDevice });
+// Keep hit feedback local to the enemy; shared world materials must never flash.
+enemy.traverse(object => { if(object.isMesh) object.material = object.material.clone(); });
 let enemyHp=100,enemyAlive=true,enemyAttackTimer=0,respawnTimer=0,attackTimer=0,swing=0,damageFlash=0;
 function spawnEnemy(){enemy.position.set((Math.random()-.5)*16,0,-10-Math.random()*9);enemyHp=100;enemyAlive=true;enemy.visible=true;enemyAttackTimer=0;document.querySelector('#enemyhp').textContent=100;}
 spawnEnemy();
 const keys=new Set();let moveX=0,moveY=0,lookTouch=null,padTouch=null,padOrigin=null;
-const mobile=matchMedia('(pointer: coarse)').matches;
+const mobile=isMobileDevice;
 if(mobile){document.querySelector('#mobile').style.display='block';document.querySelector('#message').textContent='اسحب يسار الشاشة للحركة ويمينها للنظر';}
 addEventListener('keydown',e=>{keys.add(e.code);if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();});
 addEventListener('keyup',e=>keys.delete(e.code));
@@ -133,6 +141,12 @@ function frame(){
   player.pos.addScaledVector(v,dt*(sprint?8:5));
   player.pos.x=THREE.MathUtils.clamp(player.pos.x,-29,29);
   player.pos.z=THREE.MathUtils.clamp(player.pos.z,-29,29);
+  // Prevent walking through the fixed courtyard supply crates.
+  for(const cx of [-19,19])for(const cz of [-17,5,21]){
+    const dx=player.pos.x-cx,dz=player.pos.z-cz;
+    const overlapX=2.05-Math.abs(dx),overlapZ=2.05-Math.abs(dz);
+    if(overlapX>0&&overlapZ>0){if(overlapX<overlapZ)player.pos.x+=Math.sign(dx||1)*overlapX;else player.pos.z+=Math.sign(dz||1)*overlapZ;}
+  }
   camera.position.copy(player.pos);
   camera.rotation.set(player.pitch,player.yaw,0);
   attackTimer=Math.max(0,attackTimer-dt);
