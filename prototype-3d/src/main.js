@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import './style.css';
+import { addCastleDetail, detailEnemy } from './visuals.js';
 
 const app = document.querySelector('#app');
 app.innerHTML = `
@@ -71,7 +72,9 @@ enemyPart(.9,1.05,.48,1.25,iron);enemyPart(.65,.58,.62,2.12,darkStone);
 enemyPart(.33,.8,.36,.4,darkStone,-.27);enemyPart(.33,.8,.36,.4,darkStone,.27);
 enemyPart(.3,.8,.35,1.34,darkStone,-.65);enemyPart(.3,.8,.35,1.34,darkStone,.65);
 enemyPart(.8,.14,.2,1.85,gold);enemyPart(.12,1.5,.12,1.1,mat(0xb5b8b5),.95,.1);
+detailEnemy(enemy);
 scene.add(enemy);
+const visualDetails = addCastleDetail(scene, { mobile: matchMedia('(pointer: coarse)').matches });
 let enemyHp=100,enemyAlive=true,enemyAttackTimer=0,respawnTimer=0,attackTimer=0,swing=0,damageFlash=0;
 function spawnEnemy(){enemy.position.set((Math.random()-.5)*16,0,-10-Math.random()*9);enemyHp=100;enemyAlive=true;enemy.visible=true;enemyAttackTimer=0;document.querySelector('#enemyhp').textContent=100;}
 spawnEnemy();
@@ -144,6 +147,7 @@ function frame(){
   } else {respawnTimer-=dt;if(respawnTimer<=0)spawnEnemy();}
  }
  damageFlash=Math.max(0,damageFlash-dt*1.7);updateUI();
+ visualDetails.update(clock.elapsedTime);
  renderer.render(scene,camera);
 }
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();}
