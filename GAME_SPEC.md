@@ -1,61 +1,82 @@
-# Arena Stream — Game Rules v0.1
+# Arena Stream — Target Game Specification
 
-## Match
-- 5v5
-- 10 total player seats
-- 15 minutes, uninterrupted
-- Individual kills are tracked
-- No friendly fire
-- Player code/name is visible above the character
-- Full live ranking is visible to spectators
+Status: Discovery / Target concept v0.2
+This document describes the intended product, not a claim that the current code already implements it.
 
-## Lives and damage
-Normal state:
-- Sword: 5 hits to kill
-- Spear: 4 hits to kill
-- Bow: 2 arrows to kill
+## 1. Core concept
+A browser-first Medieval combat experience designed as both a game and a live entertainment format.
 
-After a player loses both starting lives:
-- Out for 3 minutes
-- Returns with 1 weaker life
-- Sword/spear thresholds are reduced
-- One bow arrow kills
+4 real players → cooperate → fight an AI army → survive escalating stages → reach a final objective → create a match worth watching → audience participates at controlled checkpoints.
 
-After that life is lost:
-- Returns after 5 minutes if the round still has time
+## 2. Players
+- 4 human players per active squad.
+- One shared team objective.
+- Cooperative play is the default.
+- Player replacement/queue is a later system.
 
-## Respawn
-A player respawns from a random safe corner/zone near the action, never directly inside an active fight.
+## 3. Enemy army
+Target layers: basic melee, ranged/support, heavy/elite, special enemies, boss/monster encounters.
+The roster is intentionally undecided.
 
-## Anti-camping
-After 3 minutes without meaningful movement, trigger a non-lethal nudge event such as a nearby meteor impact or a bird peck.
+## 4. Stages
+The match is divided into escalating stages. Each stage can change enemy count, composition, pressure, environmental conditions, objectives and special encounters.
+Exact counts are provisional.
 
-## Audience events
-Every 5 minutes, spectators vote. The event list is selected from:
-1. Darkness / blackout
-2. Shrinking map
-3. Forced weapon swap
-4. Ground trap
-5. Leader bounty
-6. Heart
+## 5. Match duration
+Target maximum: approximately 10 minutes.
+The match should have a clear beginning, escalation, climax and conclusion.
 
-Heart:
-- Appears in a risky location
-- Capturing team gains +3 lives for every team member
-- Opposing team loses nothing
-- If a player is weakened, the Heart restores them to the normal state
+## 6. Final objective
+The long-term concept includes progression toward a final objective / throne. The exact implementation is intentionally open.
 
-## Round transition
-Normally the highest killer from each team becomes a leader.
+## 7. Combat
+Combat should emphasize directional attacks, timing, distance, positioning, defense, parry/counter opportunities, weapon identity and readable hit feedback.
 
-If the top two killers are from opposite teams, both advance.
+Possible directions include Slash, Overhead, Stab, Block, Parry, Counter, Dodge and Stamina. These are design directions, not copied implementation.
 
-If the top two killers are from the same team and the opposing team is at least 2 kills behind, both may advance.
+## 8. Audience interaction
+Audience interaction occurs at controlled checkpoints.
+- Vote between predefined events.
+- Select a challenge modifier.
+- Trigger a controlled encounter.
 
-Ambiguous ties need a deterministic tie-break rule before competitive launch.
+Rules: predictable, limited, no arbitrary control over individual players, no permanent griefing, understandable to viewers.
 
-## Next round
-- 2 returning leaders
-- 8 new players
-- Once 10 seats are filled, no additional player joins that round
-- A player who leaves early forfeits their turn
+## 9. Live-show structure
+The match should naturally create tension, reversals, near-deaths, clutch moments, team saves, boss encounters, audience decisions and a clear ending.
+
+## 10. Content generation
+A single match should potentially produce: LIVE → HIGHLIGHTS → SHORTS → LONG-FORM VIDEO → COMMUNITY CONTENT.
+
+Future automation may identify kills, near-deaths, comebacks, unusual events, audience decisions and boss moments.
+
+## 11. Prototype success criteria
+Before production infrastructure, test whether:
+1. Four players understand the game immediately.
+2. Combat feels responsive.
+3. Multiple AI enemies remain readable.
+4. Cooperation creates meaningful decisions.
+5. The match escalates.
+6. The match creates memorable moments.
+7. Spectators understand what is happening.
+8. Audience decisions add value.
+9. A complete match fits the short format.
+10. The prototype remains cheap to build and iterate.
+
+## 12. Explicitly undecided
+Do not treat these as finalized: exact weapons, classes, visual style, map, enemy roster, exact stage count, exact enemy counts, monetization, YouTube Playables integration, matchmaking, ranking, progression and art direction.
+
+## 13. Technical philosophy
+Build the smallest testable version:
+1. One arena
+2. One player
+3. Basic movement
+4. Basic melee combat
+5. A few AI enemies
+6. One escalation event
+7. Four-player cooperative test
+8. Audience interaction test
+9. Short complete match
+10. Only then expand infrastructure
+
+Do not build the final system before proving the core loop.
