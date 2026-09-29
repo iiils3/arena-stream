@@ -23,7 +23,6 @@ public class ArenaPlayer : MonoBehaviour
         var input = ArenaInput.Instance;
         if (!input || !fighter.IsAlive) return;
         float dt = Time.deltaTime;
-        input.ResetLookAfterReadGuard();
         Vector2 look = input.Look;
         float sensitivity = input.IsMobile ? mobileSensitivity : mouseSensitivity;
         transform.Rotate(0, look.x * sensitivity, 0);
@@ -49,8 +48,8 @@ public class ArenaPlayer : MonoBehaviour
         if (motor.isGrounded && verticalVelocity < 0) verticalVelocity = -2;
         verticalVelocity += gravity * dt;
         motor.Move((direction * speed + dodgeVelocity + Vector3.up * verticalVelocity) * dt);
-        if (!blocking && input.Attack) Strike(24, 17, .43f);
         if (!blocking && input.Heavy) Strike(43, 35, .82f);
+        else if (!blocking && input.Attack) Strike(24, 17, .43f);
     }
     private void Strike(float damage, float cost, float cooldown) {
         if (attackCooldown > 0 || !fighter.SpendStamina(cost)) return;
